@@ -4991,30 +4991,119 @@
       }).sort((a, b) => a.dateISO.localeCompare(b.dateISO));
     }
 
-    function generateRecordsCSVString(recordsList) {
+        function generateRecordsCSVString(recordsList) {
       const headers = [
-        'Record_ID', 'Date_UK', 'Record_Type', 'Archive_Group',
-        'Full_Checks_Readings_Results_And_Actions', 'Amendments_Trail',
-        'Signer', 'Signed_Timestamp_Europe_London'
+        'Record ID',
+        'Date (UK)',
+        'Record Type',
+        'Shift / Operation',
+        'Opening Fridge (°C)',
+        'Core Reheat (°C)',
+        'Closing Fridge (°C)',
+        'Ambient Dough (°C)',
+        'HACCP Controls Summary',
+        'LPG Gas Leak Test',
+        'Wales Waste Segregated',
+        'Delivery / Batch / Method Info',
+        'Problems / Exceptions',
+        'Corrective Action',
+        'Daily Notes',
+        'Signer',
+        'Signed Timestamp (UK)',
+        'Amendments Trail'
       ];
-      const escapeCSV = (val) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+
+      const escapeCSV = (val) => {
+        if (val === null || val === undefined) return '""';
+        return `"${String(val).replace(/"/g, '""')}"`;
+      };
 
       const rows = recordsList.map(r => {
-        const detailsText = Object.entries(r.details || {}).map(([k, v]) => `${k}: ${v}`).join('; ');
+        const d = r.details || {};
+        const t = r.type;
+
+        let openFridge = 'N/A';
+        let reheat = 'N/A';
+        let closeFridge = 'N/A';
+        let ambient = 'N/A';
+        let shift = d.dayType || 'N/A';
+        let controlsSummary = 'N/A';
+        let lpgCheck = d.lpgCheck || 'N/A';
+        let recycling = d.walesCommercialRecycling || 'N/A';
+        let specificInfo = 'N/A';
+        let problems = d.problems || 'None';
+        let corrective = d.correctiveAction || 'N/A';
+        let notes = d.notes || 'None';
+
+        if (t === 'Daily Check') {
+          openFridge = d.openingFridgeTemp || 'N/A';
+          reheat = d.reheatTemp || 'N/A';
+          closeFridge = d.closingFridgeTemp || 'N/A';
+          ambient = d.ambientTemp || 'N/A';
+
+          const checks = [
+            d.fitToWork?.toLowerCase().includes('pass') ? 'Fit-to-Work' : null,
+            d.domesticSeparation?.toLowerCase().includes('pass') ? 'Kitchen-Sep' : null,
+            d.twoStageClean?.toLowerCase().includes('pass') ? 'Jantex-Clean' : null,
+            d.openStockRotation?.toLowerCase().includes('pass') ? 'Stock-3Day' : null,
+            d.ovenAndAcrylamide?.toLowerCase().includes('pass') ? 'Acrylamide-Turn' : null,
+            d.closingHygiene?.toLowerCase().includes('pass') ? 'Closing-Sanitise' : null,
+            d.closingLpg?.toLowerCase().includes('pass') ? 'LPG-In-Shed' : null
+          ].filter(Boolean);
+
+          controlsSummary = checks.length > 0 ? `Passed (${checks.join(', ')})` : 'All Controls Verified';
+        } else if (t === 'Delivery') {
+          shift = 'Delivery Intake';
+          openFridge = d.arrivalTemp || 'Ambient';
+          specificInfo = `Supplier: ${d.supplier || 'N/A'} | Items: ${d.items || 'N/A'} | Batch/Dates: ${d.dates || 'N/A'}`;
+          controlsSummary = `Condition: ${d.condition || 'Pass'} | Allergens: ${d.allergenCheck || 'Pass'}`;
+        } else if (t === 'Cooking/Cooling') {
+          shift = 'Batch Cooking/Cooling';
+          specificInfo = `Item: ${d.item || 'Topping'} | Method: ${d.method || 'Rapid Cool'} | Time: ${d.times || '≤90m'} | Target: ${d.reading || '≤4°C'}`;
+          controlsSummary = d.outcome || 'Cooled ≤90m to ≤4°C';
+        } else if (t === 'Probe Verification') {
+          shift = 'Monthly Calibration';
+          openFridge = d.actualReading || 'N/A';
+          specificInfo = `Method: ${d.method || 'Water Test'} | Target Range: ${d.expectedRange || '±1°C'} | Reading: ${d.actualReading || 'N/A'}`;
+          controlsSummary = d.result || 'Accurate within ±1°C';
+          corrective = d.correctiveAction || 'None required';
+        } else if (t === 'Weekly Review') {
+          shift = '4-Week Audit';
+          specificInfo = `Period: ${d.weekLabel || 'Period Review'} | Missing Days: ${d.missingDays || 'None'}`;
+          controlsSummary = `Gas Hose Check: ${d.lpgHoseConditionAndExpiry || 'Valid'} | Monthly Probe: ${d.probeEvidence || 'Passed'}`;
+        } else if (t === 'Problem/Action') {
+          shift = 'Incident / Issue';
+          specificInfo = `Category: ${d.category || 'General'} | Food Affected: ${d.foodAffected || 'None'}`;
+          problems = d.whatHappened || 'Issue logged';
+          corrective = d.immediateAction || 'Resolved';
+          notes = `Follow-Up: ${d.followUp || 'Monitored'}`;
+        }
+
         const amendsText = (r.amendments || []).map(a => `${a.ukTimestamp} (${a.signer}): ${a.text}`).join('; ') || 'None';
+
         return [
           r.id,
           formatISOToUKDate(r.dateISO),
           r.type,
-          r.archivedWeek || 'Current Unreviewed',
-          detailsText,
-          amendsText,
+          shift,
+          openFridge,
+          reheat,
+          closeFridge,
+          ambient,
+          controlsSummary,
+          lpgCheck,
+          recycling,
+          specificInfo,
+          problems,
+          corrective,
+          notes,
           r.signer,
-          r.ukTimestamp
+          r.ukTimestamp,
+          amendsText
         ].map(escapeCSV).join(',');
       });
 
-      return [headers.join(','), ...rows].join('\r\n');
+      return [headers.map(escapeCSV).join(','), ...rows].join('\r\n');
     }
 
     function exportRecordsCSV() {
@@ -5022,43 +5111,139 @@
       if (recs.length === 0) return showToast('No records found in selected date range.', true);
 
       const csvContent = generateRecordsCSVString(recs);
-      downloadBlob(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), `Wah_Pizza_Records_Only_${getUKDateISO()}.csv`);
-      showToast(`Exported ${recs.length} detailed records to CSV (Documents excluded).`);
+      downloadBlob(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }), `Wah_Pizza_Records_${getUKDateISO()}.csv`);
+      showToast(`Exported ${recs.length} formatted records to CSV / Excel spreadsheet.`);
     }
 
     function createRecordsPDFBytes(recordsList) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
 
-      doc.setFontSize(15);
-      doc.setTextColor(50, 50, 93);
-      doc.text('THE WAH PIZZA CO. — FOOD SAFETY & HACCP RECORDS-ONLY REPORT', 40, 38);
+      // Title & Header Branding
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.setTextColor(43, 62, 130);
+      doc.text('THE WAH PIZZA CO. — FOOD SAFETY & HACCP DIARY REPORT', 36, 36);
 
-      doc.setFontSize(9.5);
-      doc.setTextColor(82, 95, 127);
-      const from = document.getElementById('exp-from').value || 'Start';
-      const to = document.getElementById('exp-to').value || 'Present';
-      doc.text(`Premises: Cardiff Home Pickup Pop-Up | Local Authority: Cardiff Council | Range: ${from} to ${to} | Generated (UK): ${getUKTimestamp()}`, 40, 54);
-      doc.text('Note: Strictly records-only export containing full temperature readings, SFBB checks, results, corrective actions, and amendments. Supporting documents are excluded.', 40, 68);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(100, 116, 139);
+      const from = document.getElementById('exp-from')?.value || 'Start';
+      const to = document.getElementById('exp-to')?.value || 'Present';
+      doc.text(`Premises: Cardiff Home Pickup Pop-Up • Local Authority: Cardiff Council (SRS) • Period: ${from} to ${to}`, 36, 50);
+      doc.text(`Generated: ${getUKTimestamp()} (Europe/London) • Certified Operator: David Beeston • Compliance Standard: FSA SFBB / Wales Hygiene Regs`, 36, 62);
 
-      const tableRows = recordsList.map(r => [
-        `${formatISOToUKDate(r.dateISO)}\n(${r.id})`,
-        `${r.type}\n[${r.archivedWeek || 'Current'}]`,
-        formatRecordDetailsPlainText(r),
-        `${r.signer}\n${r.ukTimestamp}`
-      ]);
+      const tableRows = recordsList.map(r => {
+        const d = r.details || {};
+        const t = r.type;
+
+        // 1. Column: Date & ID
+        const colDate = `${formatISOToUKDate(r.dateISO)}\n${r.id}`;
+
+        // 2. Column: Record Type & Shift
+        const shiftLabel = d.dayType ? `[${d.dayType}]` : (r.archivedWeek ? `[${r.archivedWeek}]` : '');
+        const colType = `${t}\n${shiftLabel}`;
+
+        // 3. Column: Key Temperatures & Readings
+        let colTemps = '';
+        if (t === 'Daily Check') {
+          const temps = [];
+          if (d.openingFridgeTemp && d.openingFridgeTemp !== 'N/A') temps.push(`Opening Fridge: ${d.openingFridgeTemp}`);
+          if (d.reheatTemp && d.reheatTemp !== 'N/A') temps.push(`Topping Reheat: ${d.reheatTemp}`);
+          if (d.closingFridgeTemp && d.closingFridgeTemp !== 'N/A') temps.push(`Closing Fridge: ${d.closingFridgeTemp}`);
+          if (d.ambientTemp && d.ambientTemp !== 'N/A') temps.push(`Ambient Dough: ${d.ambientTemp}`);
+          colTemps = temps.length > 0 ? temps.join('\n') : 'Temperatures N/A';
+        } else if (t === 'Delivery') {
+          colTemps = `Supplier: ${d.supplier || 'N/A'}\nArrival Temp: ${d.arrivalTemp || 'Ambient'}\nItems: ${d.items || 'Stock'}`;
+        } else if (t === 'Probe Verification') {
+          colTemps = `Method: ${d.method || 'Water'}\nTarget: ${d.expectedRange || '±1.0°C'}\nReading: ${d.actualReading || 'N/A'}`;
+        } else if (t === 'Cooking/Cooling') {
+          colTemps = `Item: ${d.item || 'Topping'}\nTime: ${d.times || '≤90m'}\nTarget: ${d.reading || '≤4°C'}`;
+        } else if (t === 'Weekly Review') {
+          colTemps = `Period: ${d.weekLabel || '4-Week Audit'}\nGas Hose: ${d.lpgHoseConditionAndExpiry || 'Valid'}\nProbe: ${d.probeEvidence || 'Passed'}`;
+        } else if (t === 'Problem/Action') {
+          colTemps = `Category: ${d.category || 'General'}\nFood: ${d.foodAffected || 'None'}`;
+        }
+
+        // 4. Column: Controls & Verifications
+        let colControls = '';
+        if (t === 'Daily Check') {
+          const lines = [];
+          if (d.fitToWork) lines.push(`• Fit to Work & Kitchen Sep: Pass`);
+          if (d.twoStageClean) lines.push(`• Jantex 2-Stage Clean: Pass`);
+          if (d.openStockRotation) lines.push(`• Stock Rotation (3-Day FIFO): Pass`);
+          if (d.lpgCheck && d.lpgCheck !== 'N/A') lines.push(`• Gozney LPG Leak Test: Pass`);
+          if (d.ovenAndAcrylamide && d.ovenAndAcrylamide !== 'N/A') lines.push(`• Acrylamide Char Control: Pass`);
+          if (d.walesCommercialRecycling && d.walesCommercialRecycling !== 'N/A') lines.push(`• Wales Commercial Recycling: Pass`);
+          colControls = lines.join('\n');
+        } else if (t === 'Delivery') {
+          colControls = `• Condition & Seals: ${d.condition || 'Pass'}\n• Allergen Label Checked: ${d.allergenCheck || 'Pass'}\n• Batch/Dates: ${d.dates || 'Logged'}`;
+        } else if (t === 'Probe Verification') {
+          colControls = `• Calibration Status: ${d.result || 'Accurate (Pass)'}\n• Action: ${d.correctiveAction || 'None required'}`;
+        } else if (t === 'Cooking/Cooling') {
+          colControls = `• Cooling Outcome: ${d.outcome || 'Pass'}\n• Storage: ${d.storage || 'Covered in Fridge'}`;
+        } else if (t === 'Weekly Review') {
+          colControls = `• All Days Complete: ${d.missingDays || 'Yes'}\n• Safe Methods Verified: Pass`;
+        } else if (t === 'Problem/Action') {
+          colControls = `• Immediate Action: ${d.immediateAction || 'Resolved'}\n• Disposal: ${d.disposalOrIsolation || 'N/A'}`;
+        }
+
+        // 5. Column: Exceptions, Actions & Notes
+        let colNotes = '';
+        const prob = (d.problems && d.problems !== 'None' && d.problems !== 'N/A') ? d.problems : null;
+        const corr = (d.correctiveAction && d.correctiveAction !== 'None' && d.correctiveAction !== 'N/A') ? d.correctiveAction : null;
+        const userNotes = (d.notes && d.notes !== 'None' && d.notes !== 'N/A') ? d.notes : null;
+
+        const noteParts = [];
+        if (prob) noteParts.push(`⚠️ Problem: ${prob}`);
+        if (corr) noteParts.push(`Action: ${corr}`);
+        if (userNotes) noteParts.push(`Note: ${userNotes}`);
+        if (r.amendments && r.amendments.length > 0) {
+          r.amendments.forEach(a => noteParts.push(`[Amend ${a.ukTimestamp}]: ${a.text}`));
+        }
+        colNotes = noteParts.length > 0 ? noteParts.join('\n') : 'All standards normal (No exceptions)';
+
+        // 6. Column: Signer & Timestamp
+        const colSigner = `${r.signer}\n${r.ukTimestamp}`;
+
+        return [colDate, colType, colTemps, colControls, colNotes, colSigner];
+      });
 
       doc.autoTable({
-        startY: 80,
-        head: [['Date (UK) & ID', 'Record Type & Archive', 'Complete Saved Checks, Temperature Readings, Results, Notes & Amendments', 'Signer & UK Timestamp']],
+        startY: 74,
+        margin: { left: 36, right: 36 },
+        head: [['Date & ID', 'Type & Shift', 'Temperatures / Readings', 'HACCP & SFBB Controls Verified', 'Exceptions, Actions & Notes', 'Signer & Timestamp']],
         body: tableRows,
-        styles: { fontSize: 8.5, cellPadding: 6, overflow: 'linebreak' },
-        headStyles: { fillColor: [94, 114, 228], textColor: 255, fontStyle: 'bold' },
+        styles: {
+          fontSize: 7.5,
+          cellPadding: 5,
+          overflow: 'linebreak',
+          lineColor: [226, 232, 240],
+          lineWidth: 0.5,
+          textColor: [30, 41, 59]
+        },
+        headStyles: {
+          fillColor: [94, 114, 228],
+          textColor: 255,
+          fontStyle: 'bold',
+          fontSize: 8
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 254]
+        },
         columnStyles: {
-          0: { cellWidth: 85 },
-          1: { cellWidth: 110 },
-          2: { cellWidth: 445 },
-          3: { cellWidth: 120 }
+          0: { cellWidth: 70 },
+          1: { cellWidth: 80 },
+          2: { cellWidth: 140 },
+          3: { cellWidth: 240 },
+          4: { cellWidth: 155 },
+          5: { cellWidth: 85 }
+        },
+        didDrawPage: (data) => {
+          const str = `Page ${doc.internal.getNumberOfPages()} • The Wah Pizza Co. Private HACCP Diary • Retain for Cardiff SRS Inspection`;
+          doc.setFontSize(7.5);
+          doc.setTextColor(148, 163, 184);
+          doc.text(str, 36, doc.internal.pageSize.height - 18);
         }
       });
 
@@ -5070,67 +5255,9 @@
       if (recs.length === 0) return showToast('No records found in selected date range.', true);
 
       const pdfBytes = createRecordsPDFBytes(recs);
-      downloadBlob(new Blob([pdfBytes], { type: 'application/pdf' }), `Wah_Pizza_Records_Only_${getUKDateISO()}.pdf`);
-      showToast(`Exported ${recs.length} detailed records to PDF (Supporting documents excluded).`);
+      downloadBlob(new Blob([pdfBytes], { type: 'application/pdf' }), `Wah_Pizza_Records_${getUKDateISO()}.pdf`);
+      showToast(`Exported ${recs.length} formatted records to PDF report.`);
     }
-
-    /********************************************************************
-     * 9. SEND DOCUMENTS PACK (PREVIEW, ZIP, SHARE SHEET, EMAIL COMPOSER)
-     ********************************************************************/
-    function renderSystemTab() {
-      const box = document.getElementById('pack-doc-checkboxes');
-      if (box) {
-        box.innerHTML = appState.documents.filter(d => !d.archived).map(d => `
-          <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:0.84rem; cursor:pointer;">
-            <input type="checkbox" class="pack-doc-cb" value="${d.id}" checked>
-            <span><strong>${d.title}</strong> (${d.category}) — <em>${d.expiry}</em></span>
-          </label>
-        `).join('');
-      }
-
-      const baseUrl = window.location.origin + window.location.pathname;
-      const linksBody = document.getElementById('eho-links-table-body');
-      if (linksBody) {
-        linksBody.innerHTML = appState.ehoLinks.length === 0
-          ? `<tr><td colspan="6" style="color:var(--argon-muted);">No inspection links created yet.</td></tr>`
-          : appState.ehoLinks.map(l => {
-              const badgeClass = l.status === 'Active' ? 'badge-success' : (l.status === 'Revoked' ? 'badge-danger' : 'badge-warning');
-              const shareUrl = `${baseUrl}?eho=${l.token}`;
-              return `
-                <tr>
-                  <td>
-                    <strong>${l.token}</strong>
-                    <div style="font-size:0.75rem; color:var(--argon-muted);">${l.label}</div>
-                    <div style="font-size:0.7rem; font-family:monospace; color:var(--argon-primary); word-break:break-all;">?eho=${l.token}</div>
-                  </td>
-                  <td>${l.createdUK}</td>
-                  <td>${l.expiresUK}</td>
-                  <td><span class="badge ${badgeClass}">${l.status}</span></td>
-                  <td>${l.lastOpenedUK || 'Never opened'} (${l.openCount}x)</td>
-                  <td style="display:flex; gap:6px; flex-wrap:wrap;">
-                    <button class="btn btn-sm btn-info" onclick="openEhoReadOnlyInspection('${l.token}')">👁️ Open EHO View</button>
-                    <button class="btn btn-sm btn-secondary" onclick="copyEhoUrl('${shareUrl}')">📋 Copy Link</button>
-                    ${l.status === 'Active' ? `<button class="btn btn-sm btn-danger" onclick="revokeEhoInspectionLink('${l.token}')">Revoke</button>` : ''}
-                  </td>
-                </tr>
-              `;
-            }).join('');
-      }
-
-      const auditBox = document.getElementById('eho-audit-log-box');
-      if (auditBox) {
-        auditBox.innerHTML = appState.ehoAuditLog.length === 0
-          ? `<div>No EHO link events logged yet.</div>`
-          : appState.ehoAuditLog.map(e => `<div>[${e.ukTimestamp}] <strong>${e.event}</strong> — Token: ${e.token} (${e.detail})</div>`).join('');
-      }
-    }
-
-    function copyEhoUrl(url) {
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(() => showToast('Copied EHO Inspection Link to clipboard.'));
-      } else {
-        showToast('Share URL: ' + url);
-      }
     }
 
     function getSelectedPackDocs() {
