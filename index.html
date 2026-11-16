@@ -686,21 +686,45 @@
         <h2 id="auth-gate-title" style="margin:8px 0 4px 0; color:var(--argon-heading);">🍕 The Wah Pizza Co.</h2>
         <p style="margin:0; font-size:0.82rem; color:var(--argon-muted);">Cardiff Home Pickup Pop-Up • Owner Verification</p>
       </div>
-      <div class="form-group">
-        <label class="form-label" for="auth-pin-input">Owner 4-Digit PIN or Firebase Password</label>
-        <input type="password" id="auth-pin-input" class="form-control" placeholder="Enter Owner PIN" autocomplete="current-password" onkeydown="if(event.key==='Enter') unlockOwnerSession()">
+
+      <!-- Primary: Google Sign-In Button -->
+      <button type="button" class="btn btn-lg-block" onclick="signInWithGoogle()" style="background:#ffffff; color:#3c4043; border:1px solid #dadce0; font-weight:700; display:flex; align-items:center; justify-content:center; gap:12px; box-shadow:0 1px 3px rgba(60,64,67,0.15); margin-bottom:12px;">
+        <svg width="20" height="20" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        Sign in with Google
+      </button>
+
+      <!-- Stay Signed In Duration -->
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label" for="auth-session-duration">Stay Signed In For</label>
+        <select id="auth-session-duration" class="form-control">
+          <option value="7" selected>7 Days (Recommended for Kitchen Tablet / Phone)</option>
+          <option value="30">30 Days (Monthly Operational Window)</option>
+          <option value="1">24 Hours (Single Service Day)</option>
+          <option value="0">Until Browser Closes (Single Session)</option>
+        </select>
       </div>
-      <div class="form-group" id="auth-email-group" style="margin-bottom:0.75rem;">
-        <details style="font-size:0.8rem; color:var(--argon-muted); cursor:pointer;">
-          <summary style="font-weight:600; color:var(--argon-heading); margin-bottom:6px;">Advanced: Sign in with Firebase Email & Password</summary>
-          <label class="form-label" for="auth-email-input" style="margin-top:6px;">Owner Firebase Email</label>
-          <input type="email" id="auth-email-input" class="form-control" placeholder="Enter your Firebase email">
-        </details>
+
+      <div style="background:#f8f9fe; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; margin-bottom:12px; font-size:0.75rem; color:var(--argon-heading); text-align:center;">
+        🔒 Approved Owner: <strong>beeston.mail@gmail.com</strong>
       </div>
-      <button class="btn btn-primary btn-lg-block" onclick="unlockOwnerSession()">🔓 Sign In as Owner</button>
-      <button class="btn btn-secondary btn-lg-block" style="margin-top:8px;" onclick="closeAuthModal()">✕ Cancel (Continue in Read-Only Mode)</button>
-      <p style="font-size:0.75rem; color:var(--argon-muted); text-align:center; margin-top:12px; margin-bottom:0;">
-        Protected by session lock & Firebase Cloud Sync.
+
+      <!-- Offline Emergency PIN Fallback -->
+      <details style="font-size:0.8rem; color:var(--argon-muted); margin-bottom:12px; cursor:pointer;">
+        <summary style="font-weight:600; color:var(--argon-heading); margin-bottom:8px;">Offline / Emergency: Enter 4-Digit Kitchen PIN</summary>
+        <div class="form-group">
+          <input type="password" id="auth-pin-input" class="form-control" placeholder="Enter PIN" onkeydown="if(event.key==='Enter') unlockWithPin()">
+        </div>
+        <button type="button" class="btn btn-secondary btn-lg-block" onclick="unlockWithPin()">Unlock with PIN</button>
+      </details>
+
+      <button class="btn btn-secondary btn-lg-block" onclick="closeAuthModal()">✕ Cancel (Continue in Read-Only Mode)</button>
+      <p style="font-size:0.73rem; color:var(--argon-muted); text-align:center; margin-top:12px; margin-bottom:0;">
+        Protected by Google OAuth & Firebase Cloud Sync.
       </p>
     </div>
   </div>
@@ -1977,23 +2001,31 @@ service cloud.firestore {
         </div>
       </div>
 
-      <!-- SECTION F: SECURITY & OWNER PIN MANAGEMENT -->
+      <!-- SECTION F: SECURITY, GOOGLE AUTH & OWNER ACCESS -->
       <div class="card">
         <div class="card-header">
-          <h3>6. Security, Owner PIN & Access Gate</h3>
-          <span class="badge badge-success">Local & Cloud Protected</span>
+          <h3>6. Security, Google Authentication & Approved Owner Accounts</h3>
+          <span class="badge badge-success">Google Auth Protected</span>
         </div>
         <div class="card-body">
           <p style="margin-top:0; font-size:0.85rem;">
-            Configure your private 4-digit Owner PIN used to unlock editing, daily log signing, and system controls. When locked, the app safely defaults to Read-Only EHO Inspection View.
+            Only verified Google accounts on the approved list below can unlock Owner Mode to sign records, edit Safe Methods, and modify system settings.
           </p>
+          <div style="background:#f6f9fc; border:1px solid var(--argon-border); border-radius:var(--argon-radius); padding:1rem; max-width:620px; margin-bottom:1.25rem;">
+            <label class="form-label">Approved Owner & Manager Google Accounts</label>
+            <div id="approved-emails-list" style="margin-bottom:10px;"></div>
+            <div style="display:flex; gap:8px;">
+              <input type="email" id="new-approved-email" class="form-control" placeholder="Add authorized Google email...">
+              <button class="btn btn-sm btn-primary" onclick="addApprovedEmail()">+ Add Email</button>
+            </div>
+          </div>
           <div class="form-grid" style="max-width:520px;">
             <div class="form-group">
-              <label class="form-label" for="setting-owner-pin">New 4-Digit Owner PIN</label>
+              <label class="form-label" for="setting-owner-pin">Offline Emergency Kitchen PIN</label>
               <input type="password" id="setting-owner-pin" class="form-control" maxlength="8" placeholder="Enter new 4-digit PIN">
             </div>
             <div class="form-group" style="display:flex; align-items:flex-end;">
-              <button class="btn btn-primary" onclick="updateOwnerPin()">🔒 Save New Owner PIN</button>
+              <button class="btn btn-secondary" onclick="updateOwnerPin()">Update Offline PIN</button>
             </div>
           </div>
         </div>
@@ -2218,7 +2250,9 @@ service cloud.firestore {
       return {
         schemaVersion: '3.8-secure-auth',
         systemSettings: {
-          ownerPin: '1968'
+          ownerPin: '1968',
+          approvedEmails: ['beeston.mail@gmail.com'],
+          defaultSessionDays: 7
         },
         businessProfile: {
           businessName: 'The Wah Pizza Co.',
@@ -2589,13 +2623,18 @@ service cloud.firestore {
      * 3. REAL FIREBASE AUTH + FIRESTORE CLOUD SYNC & PRIVATE LOCK
      ********************************************************************/
     let isOwnerSessionActive = false;
+    let currentOwnerProfile = null;
+
+    function isAuthorizedOwnerEmail(email) {
+      if (!email) return false;
+      const normalized = email.trim().toLowerCase();
+      const approvedList = (appState.systemSettings && appState.systemSettings.approvedEmails) || ['beeston.mail@gmail.com'];
+      return approvedList.map(e => e.trim().toLowerCase()).includes(normalized);
+    }
 
     function openAuthModal(msg) {
-      const pinEl = document.getElementById('auth-pin-input');
-      if (pinEl) pinEl.value = '';
       if (msg) showToast(msg);
       document.getElementById('auth-gate-overlay').style.display = 'flex';
-      setTimeout(() => { if (pinEl) pinEl.focus(); }, 120);
     }
 
     function closeAuthModal() {
@@ -2612,48 +2651,135 @@ service cloud.firestore {
       }
     }
 
-    function lockOwnerSession() {
+    async function lockOwnerSession() {
       isOwnerSessionActive = false;
+      currentOwnerProfile = null;
       try {
         sessionStorage.removeItem('wah_owner_session');
+        localStorage.removeItem('wah_google_owner_session');
+        if (window.firebase && firebase.auth) {
+          await firebase.auth().signOut().catch(() => {});
+        }
       } catch (e) {}
       updateAuthUI();
-      showToast('Session locked. Read-Only EHO Mode active.');
+      showToast('Signed out of Owner Mode. Read-Only EHO View active.');
     }
 
-    async function unlockOwnerSession() {
-      const email = (document.getElementById('auth-email-input')?.value || '').trim();
+    async function signInWithGoogle() {
+      if (!window.firebase || !firebase.auth) {
+        showToast('Firebase Auth SDK not ready. Please check internet connection.', true);
+        return;
+      }
+      const auth = firebase.auth();
+      const provider = new firebase.auth.GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+
+      try {
+        await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+        handleAuthenticatedUser(user);
+      } catch (error) {
+        console.error("Google Sign-In Error:", error);
+        if (error.code === 'auth/popup-blocked') {
+          showToast('Login popup was blocked by your browser. Please allow popups or open directly.', true);
+        } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
+          showToast('Google Sign-In cancelled.');
+        } else {
+          showToast('Google Sign-In Error: ' + error.message, true);
+        }
+      }
+    }
+
+    function handleAuthenticatedUser(user) {
+      if (!user || !user.email) return;
+
+      if (!isAuthorizedOwnerEmail(user.email)) {
+        showToast(`Access Denied: ${user.email} is not on the authorized owner list.`, true);
+        if (window.firebase && firebase.auth) {
+          firebase.auth().signOut().catch(() => {});
+        }
+        isOwnerSessionActive = false;
+        updateAuthUI();
+        return;
+      }
+
+      const durationDays = parseInt(document.getElementById('auth-session-duration')?.value || '7', 10);
+      const expiryMs = durationDays > 0 ? Date.now() + (durationDays * 24 * 60 * 60 * 1000) : 0;
+
+      const sessionData = {
+        email: user.email,
+        displayName: user.displayName || 'David Beeston',
+        expiresAtMs: expiryMs,
+        savedAtUK: getUKTimestamp()
+      };
+
+      try {
+        if (expiryMs > 0) {
+          localStorage.setItem('wah_google_owner_session', JSON.stringify(sessionData));
+        }
+        sessionStorage.setItem('wah_owner_session', 'active');
+      } catch (e) {}
+
+      currentOwnerProfile = sessionData;
+      isOwnerSessionActive = true;
+      closeAuthModal();
+      updateAuthUI();
+      switchMainTab('today');
+      showToast(`Welcome ${user.displayName || user.email}! Owner mode active ${durationDays > 0 ? `for ${durationDays} days` : 'for this session'}.`);
+    }
+
+    function unlockWithPin() {
       const pin = (document.getElementById('auth-pin-input')?.value || '').trim();
       const configuredPin = (appState.systemSettings && appState.systemSettings.ownerPin) || '1968';
 
-      // 1. If Firebase Email & Password provided, attempt Firebase Auth
-      if (email && pin.length >= 6 && window.firebaseAuthSignIn) {
-        try {
-          await window.firebaseAuthSignIn(email, pin);
-          isOwnerSessionActive = true;
-          try { sessionStorage.setItem('wah_owner_session', 'active'); } catch (e) {}
-          closeAuthModal();
-          updateAuthUI();
-          switchMainTab('today');
-          showToast('Signed in via Firebase Auth & synced with Firestore.');
-          return;
-        } catch (err) {
-          showToast('Firebase Auth Error (' + err.code + '): ' + err.message, true);
-          return;
-        }
-      }
-
-      // 2. Strict PIN verification (exact match)
       if (pin === configuredPin) {
         isOwnerSessionActive = true;
+        currentOwnerProfile = { email: 'beeston.mail@gmail.com', displayName: 'David Beeston (PIN Verified)' };
         try { sessionStorage.setItem('wah_owner_session', 'active'); } catch (e) {}
         closeAuthModal();
         updateAuthUI();
         switchMainTab('today');
-        showToast('Authenticated as David Beeston (Owner).');
+        showToast('Authenticated via Offline Kitchen PIN.');
       } else {
-        showToast('Incorrect Owner PIN. Please try again.', true);
+        showToast('Incorrect Kitchen PIN.', true);
       }
+    }
+
+    function checkExistingOwnerSession() {
+      // 1. Session storage for current tab
+      try {
+        if (sessionStorage.getItem('wah_owner_session') === 'active') {
+          return true;
+        }
+      } catch (e) {}
+
+      // 2. Persistent timed Google session in localStorage
+      try {
+        const raw = localStorage.getItem('wah_google_owner_session');
+        if (raw) {
+          const sess = JSON.parse(raw);
+          if (sess && sess.expiresAtMs && Date.now() < sess.expiresAtMs) {
+            if (isAuthorizedOwnerEmail(sess.email)) {
+              currentOwnerProfile = sess;
+              return true;
+            }
+          } else if (sess && sess.expiresAtMs && Date.now() >= sess.expiresAtMs) {
+            localStorage.removeItem('wah_google_owner_session');
+          }
+        }
+      } catch (e) {}
+
+      // 3. Firebase Auth currentUser check
+      if (window.firebase && firebase.auth) {
+        const u = firebase.auth().currentUser;
+        if (u && u.email && isAuthorizedOwnerEmail(u.email)) {
+          currentOwnerProfile = { email: u.email, displayName: u.displayName || u.email };
+          return true;
+        }
+      }
+
+      return false;
     }
 
     function updateAuthUI() {
@@ -2664,12 +2790,13 @@ service cloud.firestore {
       if (isOwnerSessionActive) {
         body.classList.remove('eho-readonly');
         if (roleBadge) {
-          roleBadge.textContent = '👤 Owner Mode (David Beeston)';
+          const name = currentOwnerProfile?.email || 'beeston.mail@gmail.com';
+          roleBadge.textContent = `👤 ${name}`;
           roleBadge.style.background = 'rgba(45, 206, 137, 0.25)';
           roleBadge.style.color = '#fff';
         }
         if (authToggleBtn) {
-          authToggleBtn.textContent = '🔒 Lock Session';
+          authToggleBtn.textContent = '🔒 Sign Out';
           authToggleBtn.className = 'btn btn-sm btn-secondary';
         }
       } else {
@@ -2688,6 +2815,48 @@ service cloud.firestore {
           switchMainTab('records');
         }
       }
+      renderApprovedEmailsList();
+    }
+
+    function renderApprovedEmailsList() {
+      const container = document.getElementById('approved-emails-list');
+      if (!container) return;
+      const emails = (appState.systemSettings && appState.systemSettings.approvedEmails) || ['beeston.mail@gmail.com'];
+      container.innerHTML = emails.map((em, idx) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#fff; padding:6px 12px; border:1px solid var(--argon-border); border-radius:6px; margin-bottom:6px; font-size:0.85rem;">
+          <span><strong>${escapeHtml(em)}</strong> ${em.toLowerCase() === 'beeston.mail@gmail.com' ? '<span class="badge badge-primary" style="margin-left:6px;">Primary Owner</span>' : ''}</span>
+          ${em.toLowerCase() !== 'beeston.mail@gmail.com' ? `<button class="btn btn-sm btn-danger" onclick="removeApprovedEmail(${idx})">Remove</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function addApprovedEmail() {
+      const input = document.getElementById('new-approved-email');
+      const val = (input?.value || '').trim().toLowerCase();
+      if (!val || !val.includes('@')) return showToast('Please enter a valid email address.', true);
+
+      appState.systemSettings = appState.systemSettings || {};
+      appState.systemSettings.approvedEmails = appState.systemSettings.approvedEmails || ['beeston.mail@gmail.com'];
+      if (appState.systemSettings.approvedEmails.includes(val)) {
+        return showToast('Email already in approved list.');
+      }
+      appState.systemSettings.approvedEmails.push(val);
+      saveState();
+      input.value = '';
+      renderApprovedEmailsList();
+      showToast(`Added ${val} to approved owner list.`);
+    }
+
+    function removeApprovedEmail(idx) {
+      if (!appState.systemSettings || !appState.systemSettings.approvedEmails) return;
+      const em = appState.systemSettings.approvedEmails[idx];
+      if (em.toLowerCase() === 'beeston.mail@gmail.com') {
+        return showToast('Cannot remove primary owner email.', true);
+      }
+      appState.systemSettings.approvedEmails.splice(idx, 1);
+      saveState();
+      renderApprovedEmailsList();
+      showToast(`Removed ${em} from approved list.`);
     }
 
     function updateOwnerPin() {
@@ -2700,7 +2869,7 @@ service cloud.firestore {
       appState.systemSettings.ownerPin = val;
       saveState();
       pinInput.value = '';
-      showToast('Owner PIN updated and saved securely.');
+      showToast('Emergency kitchen PIN updated and saved.');
     }
 
     async function initFirebaseIfConfigured() {
@@ -2754,6 +2923,13 @@ service cloud.firestore {
         // Listen for Auth changes and subscribe to real-time Firestore updates
         fbAuth.onAuthStateChanged(async (user) => {
           if (user) {
+            if (!user.isAnonymous && user.email) {
+              if (isAuthorizedOwnerEmail(user.email)) {
+                isOwnerSessionActive = true;
+                currentOwnerProfile = { email: user.email, displayName: user.displayName || user.email };
+                updateAuthUI();
+              }
+            }
             const userIdentifier = user.isAnonymous ? 'Auto-Authenticated Session' : user.email;
             document.getElementById('sync-status-badge').textContent = '☁️ ' + (user.isAnonymous ? 'Auto-Synced (Cloud)' : user.email);
             if (diagAuth) diagAuth.innerHTML = `✅ Auth Status: Connected as <strong>${userIdentifier}</strong>`;
@@ -4605,16 +4781,8 @@ service cloud.firestore {
       setExportDatePreset(3);
       updateClockBadge();
 
-      // Check session storage for existing owner session
-      try {
-        if (sessionStorage.getItem('wah_owner_session') === 'active') {
-          isOwnerSessionActive = true;
-        } else {
-          isOwnerSessionActive = false;
-        }
-      } catch (e) {
-        isOwnerSessionActive = false;
-      }
+      // Check persistent timed Google session or session storage
+      isOwnerSessionActive = checkExistingOwnerSession();
       updateAuthUI();
 
       // Start on records tab if in read-only view
