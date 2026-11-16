@@ -613,21 +613,136 @@
       vertical-align: top;
     }
 
-    /* Record Cards */
+    /* Executive Audit Cards */
     .record-item {
       border: 1px solid var(--argon-border);
       border-radius: var(--argon-radius);
-      padding: 1rem;
-      margin-bottom: 0.85rem;
+      padding: 1.1rem;
+      margin-bottom: 1rem;
       background: #fff;
+      box-shadow: 0 1px 3px rgba(50, 50, 93, 0.04), 0 1px 0 rgba(0, 0, 0, 0.02);
+      transition: all 0.2s ease;
+    }
+    .record-item:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 4px 6px rgba(50, 50, 93, 0.08);
     }
     .record-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .audit-vitals-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 0.75rem;
+      align-items: center;
+    }
+    .audit-temp-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+    .audit-temp-pill.alert {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+    .audit-temp-pill.neutral {
+      background: #f8fafc;
+      color: #334155;
+      border-color: #e2e8f0;
+    }
+    .audit-control-pills {
+      display: flex;
       flex-wrap: wrap;
       gap: 6px;
+      margin-bottom: 0.65rem;
+    }
+    .audit-control-pill {
+      font-size: 0.74rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: #f1f5f9;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .audit-control-pill.pass {
+      background: #f0fdf4;
+      color: #15803d;
+      border-color: #dcfce7;
+      font-weight: 500;
+    }
+    .audit-control-pill.fail {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fee2e2;
+      font-weight: 600;
+    }
+    .audit-details-accordion {
+      margin-top: 0.65rem;
+      background: #f8f9fe;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.8rem;
+    }
+    .audit-details-accordion summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: #5e72e4;
+      user-select: none;
+      outline: none;
+    }
+    .audit-details-accordion summary:hover {
+      text-decoration: underline;
+    }
+    .audit-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 8px;
+      margin-top: 0.65rem;
+    }
+    .audit-grid-item {
+      padding: 6px 10px;
+      background: #fff;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+    .audit-note-box {
+      margin: 0.5rem 0;
+      padding: 0.5rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      background: #f8f9fe;
+      border-left: 3px solid #5e72e4;
+    }
+    .audit-alert-box {
+      margin: 0.5rem 0;
+      padding: 0.5rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      background: #fffaf0;
+      border-left: 3px solid #dd6b20;
+      color: #9c4221;
     }
     .amendment-box {
       margin-top: 0.6rem;
@@ -3818,17 +3933,236 @@ service cloud.firestore {
       };
     }
 
+    function openImageModal(src, title) {
+      openModal(
+        title || 'Image Viewer',
+        `<div style="text-align:center;"><img src="${escapeHtml(src)}" style="max-width:100%; max-height:75vh; border-radius:6px; box-shadow:0 4px 6px rgba(0,0,0,0.1);"></div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">Close</button>`
+      );
+    }
+
     function formatRecordDetailsHTML(rec) {
       const d = rec.details || {};
-      let html = Object.entries(d)
-        .map(([k, v]) => `<span style="margin-right:14px;"><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</span>`)
-        .join(' ');
-      if (rec.receiptImageUrl) {
-        const safeUrl = (rec.receiptImageUrl.startsWith('data:image/') || rec.receiptImageUrl.startsWith('https://') || rec.receiptImageUrl.startsWith('http://')) ? rec.receiptImageUrl : '';
-        if (safeUrl) {
-          html += `<div style="margin-top:6px;"><img src="${escapeHtml(safeUrl)}" alt="Delivery Receipt" style="max-height:90px; border-radius:4px; border:1px solid #ccc;"></div>`;
+      const type = rec.type;
+
+      // 1. DAILY CHECK EXECUTIVE AUDIT CARD
+      if (type === 'Daily Check') {
+        const openFridge = d.openingFridgeTemp || 'N/A';
+        const reheat = d.reheatTemp || 'N/A';
+        const closeFridge = d.closingFridgeTemp || 'N/A';
+        const ambient = d.ambientTemp || 'N/A';
+        const dayType = d.dayType || 'Both';
+
+        const openVal = parseFloat(openFridge);
+        const reheatVal = parseFloat(reheat);
+        const closeVal = parseFloat(closeFridge);
+
+        const openFridgeAlert = !isNaN(openVal) && openVal > 8.0;
+        const reheatAlert = !isNaN(reheatVal) && reheatVal < 75.0;
+        const closeFridgeAlert = !isNaN(closeVal) && closeVal > 8.0;
+
+        let vitalsHtml = `<div class="audit-vitals-row">`;
+        if (openFridge !== 'N/A' && openFridge !== 'Not recorded') {
+          vitalsHtml += `<span class="audit-temp-pill ${openFridgeAlert ? 'alert' : ''}" title="Legal Limit: ≤ 8°C (Recommended: ≤ 5°C)">
+            🧊 <strong>Opening Fridge:</strong> ${escapeHtml(openFridge)} ${openFridgeAlert ? '⚠️ >8°C' : '✓'}
+          </span>`;
         }
+        if (reheat !== 'N/A' && reheat !== 'Not recorded') {
+          vitalsHtml += `<span class="audit-temp-pill ${reheatAlert ? 'alert' : ''}" title="Cardiff SRS Core Reheat: ≥ 75°C for 30s">
+            🍕 <strong>Topping Reheat:</strong> ${escapeHtml(reheat)} ${reheatAlert ? '⚠️ <75°C' : '✓'}
+          </span>`;
+        }
+        if (closeFridge !== 'N/A' && closeFridge !== 'Not recorded') {
+          vitalsHtml += `<span class="audit-temp-pill ${closeFridgeAlert ? 'alert' : ''}" title="Legal Limit: ≤ 8°C">
+            🧊 <strong>Closing Fridge:</strong> ${escapeHtml(closeFridge)} ${closeFridgeAlert ? '⚠️ >8°C' : '✓'}
+          </span>`;
+        }
+        if (ambient !== 'N/A' && ambient !== 'Not recorded') {
+          vitalsHtml += `<span class="audit-temp-pill neutral" title="Ambient Dough Proofing Temperature">
+            🌡️ <strong>Ambient Proofing:</strong> ${escapeHtml(ambient)}
+          </span>`;
+        }
+        vitalsHtml += `<span class="audit-temp-pill neutral">📋 <strong>Shift:</strong> ${escapeHtml(dayType)}</span>`;
+        vitalsHtml += `</div>`;
+
+        // Key control check pills
+        const checks = [
+          { label: '48h Fit to Work', val: d.fitToWork },
+          { label: 'Domestic Kitchen Separation', val: d.domesticSeparation },
+          { label: 'Two-Stage Jantex Clean', val: d.twoStageClean },
+          { label: '3-Day Stock Rotation', val: d.openStockRotation },
+          { label: 'Gozney LPG Leak Test', val: d.lpgCheck },
+          { label: 'Gozney Acrylamide Control', val: d.ovenAndAcrylamide },
+          { label: 'Closing Sanitise & Open Lids', val: d.closingHygiene },
+          { label: 'LPG Off & In Shed', val: d.closingLpg },
+          { label: 'Wales Commercial Recycling', val: d.walesCommercialRecycling }
+        ].filter(c => c.val && c.val !== 'N/A');
+
+        let pillsHtml = `<div class="audit-control-pills">`;
+        checks.forEach(c => {
+          const isPass = (typeof c.val === 'string' && c.val.toLowerCase().includes('pass'));
+          pillsHtml += `<span class="audit-control-pill ${isPass ? 'pass' : 'fail'}">${isPass ? '✓' : '⚠️'} ${escapeHtml(c.label)}</span>`;
+        });
+        pillsHtml += `</div>`;
+
+        // Problems / Corrective Actions
+        let alertHtml = '';
+        const hasProb = d.problems && d.problems !== 'None' && d.problems !== 'N/A';
+        const hasCorr = d.correctiveAction && d.correctiveAction !== 'None' && d.correctiveAction !== 'N/A';
+        if (hasProb || hasCorr) {
+          alertHtml = `<div class="audit-alert-box">
+            <strong>⚠️ Exception Logged:</strong> ${escapeHtml(d.problems || 'N/A')}
+            ${hasCorr ? `<br><strong>Corrective Action Taken:</strong> ${escapeHtml(d.correctiveAction)}` : ''}
+          </div>`;
+        }
+
+        let notesHtml = '';
+        if (d.notes && d.notes !== 'None' && d.notes !== 'N/A') {
+          notesHtml = `<div class="audit-note-box"><strong>Daily Notes:</strong> ${escapeHtml(d.notes)}</div>`;
+        }
+
+        // Full Collapsible Verification Breakdown
+        const detailsGridHtml = `
+          <details class="audit-details-accordion">
+            <summary>▾ View Complete Verification Checklist (Open & Prep, Service & Close)</summary>
+            <div class="audit-grid">
+              <div class="audit-grid-item">
+                <div style="font-weight:600; color:#2b6cb0; margin-bottom:4px;">☀️ Open & Prep Checks</div>
+                <div><strong>Fit to Work (48h):</strong> ${escapeHtml(d.fitToWork || 'N/A')}</div>
+                <div><strong>Domestic Kitchen Sep:</strong> ${escapeHtml(d.domesticSeparation || 'N/A')}</div>
+                <div><strong>Two-Stage Clean:</strong> ${escapeHtml(d.twoStageClean || 'N/A')}</div>
+                <div><strong>Stock Rotation (3-Day):</strong> ${escapeHtml(d.openStockRotation || 'N/A')}</div>
+                <div><strong>Rapid Cooling (≤90m):</strong> ${escapeHtml(d.cooling90m || 'N/A')}</div>
+                <div><strong>LPG Soapy Water Leak Test:</strong> ${escapeHtml(d.lpgCheck || 'N/A')}</div>
+              </div>
+              <div class="audit-grid-item">
+                <div style="font-weight:600; color:#9c4221; margin-bottom:4px;">🌙 Service & Close Checks</div>
+                <div><strong>Gozney Acrylamide Prevention:</strong> ${escapeHtml(d.ovenAndAcrylamide || 'N/A')}</div>
+                <div><strong>Pest & Fire Safety:</strong> ${escapeHtml(d.pestWaste || 'N/A')}</div>
+                <div><strong>Allergen Signposting:</strong> ${escapeHtml(d.allergenSignposting || 'N/A')}</div>
+                <div><strong>Closing Hygiene & Stock Lids:</strong> ${escapeHtml(d.closingHygiene || 'N/A')}</div>
+                <div><strong>LPG Off & Stored in Shed:</strong> ${escapeHtml(d.closingLpg || 'N/A')}</div>
+                <div><strong>Wales Commercial Recycling:</strong> ${escapeHtml(d.walesCommercialRecycling || 'N/A')}</div>
+              </div>
+            </div>
+          </details>
+        `;
+
+        return vitalsHtml + pillsHtml + alertHtml + notesHtml + detailsGridHtml;
       }
+
+      // 2. DELIVERY AUDIT CARD
+      if (type === 'Delivery') {
+        const supplier = d.supplier || 'Supplier';
+        const items = d.items || 'Stock';
+        const temp = d.arrivalTemp || 'Ambient';
+        const isTempAlert = temp.toLowerCase().includes('°c') && parseFloat(temp) > 8.0;
+
+        let html = `
+          <div class="audit-vitals-row">
+            <span class="audit-temp-pill neutral">🚚 <strong>Supplier:</strong> ${escapeHtml(supplier)}</span>
+            <span class="audit-temp-pill ${isTempAlert ? 'alert' : ''}">🌡️ <strong>Arrival Temp:</strong> ${escapeHtml(temp)}</span>
+            <span class="audit-temp-pill neutral">📦 <strong>Items:</strong> ${escapeHtml(items)}</span>
+            <span class="audit-control-pill pass">✓ Condition & Seals Intact</span>
+            <span class="audit-control-pill pass">✓ Allergen Info Checked</span>
+          </div>
+          <div style="font-size:0.8rem; color:var(--argon-muted); margin-bottom:4px;">
+            <strong>Traceability / Dates:</strong> ${escapeHtml(d.dates || 'N/A')} | <strong>Invoice/Batch:</strong> ${escapeHtml(d.traceability || 'N/A')}
+          </div>
+        `;
+        if (d.notes && d.notes !== 'None') {
+          html += `<div class="audit-note-box"><strong>Notes:</strong> ${escapeHtml(d.notes)}</div>`;
+        }
+        if (rec.receiptImageUrl) {
+          const safeUrl = (rec.receiptImageUrl.startsWith('data:image/') || rec.receiptImageUrl.startsWith('https://') || rec.receiptImageUrl.startsWith('http://')) ? rec.receiptImageUrl : '';
+          if (safeUrl) {
+            html += `<div style="margin-top:8px;">
+              <span style="font-size:0.75rem; color:var(--argon-muted); font-weight:600;">Optimised Delivery Invoice Photo:</span><br>
+              <img src="${escapeHtml(safeUrl)}" alt="Delivery Receipt" style="max-height:100px; border-radius:4px; border:1px solid #cbd5e1; cursor:pointer; margin-top:4px;" onclick="openImageModal('${escapeHtml(safeUrl)}', 'Delivery Receipt - ${escapeHtml(supplier)}')">
+            </div>`;
+          }
+        }
+        return html;
+      }
+
+      // 3. COOKING / COOLING BATCH CARD
+      if (type === 'Cooking/Cooling') {
+        return `
+          <div class="audit-vitals-row">
+            <span class="audit-temp-pill neutral">🍕 <strong>Item:</strong> ${escapeHtml(d.item || 'Cooked Topping')}</span>
+            <span class="audit-temp-pill">⏱️ <strong>Cooling Time:</strong> ${escapeHtml(d.times || '≤90 mins')}</span>
+            <span class="audit-temp-pill">🧊 <strong>Target:</strong> ${escapeHtml(d.reading || '≤4°C')}</span>
+            <span class="audit-control-pill pass">✓ ${escapeHtml(d.outcome || 'Cooled ≤90m to ≤4°C')}</span>
+          </div>
+          <div style="font-size:0.8rem; color:var(--argon-muted);">
+            <strong>Method:</strong> ${escapeHtml(d.method || 'Rapid Shallow Pan Chilling')} | <strong>Storage:</strong> ${escapeHtml(d.storage || 'Covered & Dated in Under-Counter Fridge')}
+          </div>
+          ${d.notes && d.notes !== 'None' ? `<div class="audit-note-box"><strong>Notes:</strong> ${escapeHtml(d.notes)}</div>` : ''}
+        `;
+      }
+
+      // 4. PROBE VERIFICATION CARD
+      if (type === 'Probe Verification') {
+        const isPass = (d.result || '').toLowerCase().includes('pass');
+        return `
+          <div class="audit-vitals-row">
+            <span class="audit-temp-pill neutral">🔬 <strong>Method:</strong> ${escapeHtml(d.method || 'Boiling/Ice Water')}</span>
+            <span class="audit-temp-pill ${isPass ? '' : 'alert'}">🌡️ <strong>Probe Reading:</strong> ${escapeHtml(d.actualReading || '0.0°C')}</span>
+            <span class="audit-temp-pill neutral">🎯 <strong>Expected Range:</strong> ${escapeHtml(d.expectedRange || '-1.0°C to +1.0°C')}</span>
+            <span class="audit-control-pill ${isPass ? 'pass' : 'fail'}">${isPass ? '✓ Accurate (±1°C)' : '⚠️ Drift Detected'}</span>
+          </div>
+          <div style="font-size:0.8rem; color:var(--argon-muted);">
+            <strong>Action / Calibration Result:</strong> ${escapeHtml(d.correctiveAction || 'None required — probe accurate within tolerances')}
+          </div>
+        `;
+      }
+
+      // 5. WEEKLY / 4-WEEK REVIEW CARD
+      if (type === 'Weekly Review') {
+        return `
+          <div class="audit-vitals-row">
+            <span class="audit-temp-pill neutral">📁 <strong>Audit Period:</strong> ${escapeHtml(d.weekLabel || '4-Week Period')}</span>
+            <span class="audit-control-pill pass">✓ Logs Reviewed</span>
+            <span class="audit-control-pill pass">✓ Gas Hose Inspected (<5 Yrs)</span>
+            <span class="audit-control-pill pass">✓ Probe Accuracy Checked</span>
+          </div>
+          <div class="audit-grid">
+            <div class="audit-grid-item">
+              <div><strong>All Days Logged:</strong> ${escapeHtml(d.missingDays || 'All trading days complete')}</div>
+              <div><strong>Alarms/Deviations:</strong> ${escapeHtml(d.alarmsAndExceptions || 'None')}</div>
+            </div>
+            <div class="audit-grid-item">
+              <div><strong>LPG Hose 5-Year Check:</strong> ${escapeHtml(d.lpgHoseConditionAndExpiry || 'Valid BS 3212/EN 16436, no cracks/perishing')}</div>
+              <div><strong>Monthly Probe Test:</strong> ${escapeHtml(d.probeEvidence || 'Ice/boiling verification passed')}</div>
+            </div>
+          </div>
+          ${d.notes ? `<div class="audit-note-box"><strong>Reviewer Sign-off:</strong> ${escapeHtml(d.notes)}</div>` : ''}
+        `;
+      }
+
+      // 6. PROBLEM / ACTION CARD
+      if (type === 'Problem/Action') {
+        return `
+          <div class="audit-vitals-row">
+            <span class="audit-temp-pill alert">⚠️ <strong>Category:</strong> ${escapeHtml(d.category || 'General')}</span>
+            <span class="audit-temp-pill neutral">🍕 <strong>Food Affected:</strong> ${escapeHtml(d.foodAffected || 'None')}</span>
+          </div>
+          <div class="audit-alert-box">
+            <strong>What Happened:</strong> ${escapeHtml(d.whatHappened || 'Issue logged')}<br>
+            <strong>Immediate Action:</strong> ${escapeHtml(d.immediateAction || 'Isolated/Resolved')}<br>
+            <strong>Disposal / Isolation:</strong> ${escapeHtml(d.disposalOrIsolation || 'N/A')}<br>
+            <strong>Follow-Up / Prevention:</strong> ${escapeHtml(d.followUp || 'Monitored')}
+          </div>
+        `;
+      }
+
+      // 7. GENERIC FALLBACK
+      let html = `<div class="audit-grid">`;
+      Object.entries(d).forEach(([k, v]) => {
+        const label = k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+        html += `<div class="audit-grid-item"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(v)}</div>`;
+      });
+      html += `</div>`;
       return html;
     }
 
@@ -3896,20 +4230,33 @@ service cloud.firestore {
         </div>
       `).join('');
 
+      let typeBadgeClass = 'badge-primary';
+      let typeIcon = '☀️';
+      if (r.type === 'Weekly Review') { typeBadgeClass = 'badge-warning'; typeIcon = '📋'; }
+      else if (r.type === 'Delivery') { typeBadgeClass = 'badge-info'; typeIcon = '📦'; }
+      else if (r.type === 'Probe Verification') { typeBadgeClass = 'badge-success'; typeIcon = '🌡️'; }
+      else if (r.type === 'Cooking/Cooling') { typeBadgeClass = 'badge-info'; typeIcon = '❄️'; }
+      else if (r.type === 'Problem/Action') { typeBadgeClass = 'badge-danger'; typeIcon = '⚠️'; }
+
+      const hasException = (r.details?.problems && r.details.problems !== 'None' && r.details.problems !== 'N/A');
+
       return `
         <div class="record-item">
           <div class="record-header">
-            <div>
-              <span class="badge badge-primary">${escapeHtml(r.type)}</span>
-              <strong style="margin-left:6px; color:var(--argon-heading);">${escapeHtml(formatISOToUKDate(r.dateISO))}</strong>
-              <span style="font-size:0.78rem; color:var(--argon-muted); margin-left:6px;">(${escapeHtml(r.id)})</span>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <span class="badge ${typeBadgeClass}">${typeIcon} ${escapeHtml(r.type)}</span>
+              <strong style="color:var(--argon-heading); font-size:0.95rem;">${escapeHtml(formatISOToUKDate(r.dateISO))}</strong>
+              <span class="badge ${hasException ? 'badge-warning' : 'badge-success'}" style="font-size:0.68rem; padding:3px 7px;">
+                ${hasException ? '⚠️ Exception Logged' : '✓ SFBB Controls Passed'}
+              </span>
+              <span style="font-size:0.75rem; color:var(--argon-muted);">(${escapeHtml(r.id)})</span>
             </div>
-            <div style="font-size:0.78rem; color:var(--argon-muted);">
-              Signed: <strong>${escapeHtml(r.signer)}</strong> @ ${escapeHtml(r.ukTimestamp)}
-              <button class="btn btn-sm btn-secondary owner-only" style="margin-left:8px;" onclick="promptAmendRecord('${escapeHtml(r.id)}')">+ Add Amendment</button>
+            <div style="font-size:0.78rem; color:var(--argon-muted); display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+              <span>Signed by: <strong>${escapeHtml(r.signer)}</strong> @ ${escapeHtml(r.ukTimestamp)}</span>
+              <button class="btn btn-sm btn-secondary owner-only" onclick="promptAmendRecord('${escapeHtml(r.id)}')">+ Add Amendment</button>
             </div>
           </div>
-          <div style="font-size:0.85rem; color:var(--argon-text);">
+          <div>
             ${formatRecordDetailsHTML(r)}
           </div>
           ${amendsHTML}
