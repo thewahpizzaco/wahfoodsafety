@@ -892,7 +892,7 @@
         <div class="card-header">
           <div>
             <h3>☀️ Daily Opening, Prep, Trading & Closing Checks</h3>
-            <div style="font-size:0.8rem; color:var(--argon-muted);">Select your routine shift below (Morning vs Evening) for a focused, clean checklist.</div>
+            <div style="font-size:0.8rem; color:var(--argon-muted);">Select your routine below (Open & Prep vs Service & Close) for a focused, clean checklist.</div>
           </div>
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             <button type="button" class="btn btn-sm btn-success" onclick="toggleAllCheckboxesInContainer('sub-daily', true)">☑️ Tick Visible</button>
@@ -920,10 +920,10 @@
           <!-- ROUTINE SHIFT SELECTOR: MORNING OPENING vs EVENING CLOSING -->
           <div class="shift-view-bar" role="tablist">
             <button type="button" class="shift-pill active" id="pill-shift-morning" onclick="switchShiftView('morning')">
-              <span>☀️ 1. Morning Opening & Prep</span>
+              <span>☀️ 1. Open & Prep</span>
             </button>
             <button type="button" class="shift-pill" id="pill-shift-evening" onclick="switchShiftView('evening')">
-              <span>🌙 2. Evening Service & Close</span>
+              <span>🌙 2. Service & Close</span>
             </button>
             <button type="button" class="shift-pill" id="pill-shift-all" onclick="switchShiftView('all')">
               <span>📋 View Complete Day</span>
@@ -933,17 +933,17 @@
           <!-- MORNING QUICK ACTION BANNER -->
           <div id="morning-quick-bar" style="display:flex; justify-content:space-between; align-items:center; background:#ebf8ff; border:1px solid #bee3f8; padding:0.65rem 0.9rem; border-radius:var(--argon-radius); margin-bottom:1rem; flex-wrap:wrap; gap:8px;">
             <div style="font-size:0.82rem; color:#2b6cb0;">
-              <strong>☀️ Morning Focus:</strong> Hygiene, 48h fitness, ambient dough, domestic separation & Gozney leak test.
+              <strong>☀️ Open & Prep Focus:</strong> Hygiene, 48h fitness, ambient dough, domestic separation & Gozney leak test.
             </div>
-            <button type="button" class="btn btn-sm btn-info" onclick="quickFillOpeningCheck()">⚡ Fast Morning Opening Pass</button>
+            <button type="button" class="btn btn-sm btn-info" onclick="quickFillOpeningCheck()">⚡ Fast Open & Prep Pass</button>
           </div>
 
           <!-- EVENING QUICK ACTION BANNER -->
           <div id="evening-quick-bar" style="display:none; justify-content:space-between; align-items:center; background:#fffaf0; border:1px solid #feebc8; padding:0.65rem 0.9rem; border-radius:var(--argon-radius); margin-bottom:1rem; flex-wrap:wrap; gap:8px;">
             <div style="font-size:0.82rem; color:#9c4221;">
-              <strong>🌙 Evening Focus:</strong> Closing fridge temp, Jantex sanitise, Gozney shut off & LPG in shed, Wales recycling.
+              <strong>🌙 Service & Close Focus:</strong> Closing fridge temp, Jantex sanitise, Gozney shut off & LPG in shed, Wales recycling.
             </div>
-            <button type="button" class="btn btn-sm btn-info" onclick="quickFillClosingCheck()">🌙 Fast Evening Closing Pass</button>
+            <button type="button" class="btn btn-sm btn-info" onclick="quickFillClosingCheck()">🌙 Fast Service & Close Pass</button>
           </div>
 
           <!-- SECTION 1: PERSONAL HYGIENE, FITNESS TO WORK & DOMESTIC SEPARATION CHECKBOXES -->
@@ -1161,7 +1161,7 @@
           </div>
 
           <div id="morning-next-btn-box" style="text-align:center; margin:1rem 0;">
-            <button type="button" class="btn btn-primary" onclick="switchShiftView('evening')">Ready for Evening Closing Checks? Proceed to Close →</button>
+            <button type="button" class="btn btn-primary" onclick="switchShiftView('evening')">Ready for Service & Close? Proceed to Service & Close →</button>
           </div>
 
           <div class="form-grid">
@@ -3426,7 +3426,7 @@ service cloud.firestore {
       if (fr && !fr.value) fr.value = '3.6';
       const rh = document.getElementById('daily-reheat-temp');
       if (rh && !rh.value) rh.value = '78.5';
-      showToast('☀️ Morning opening checks & standard temperatures pre-filled.');
+      showToast('☀️ Open & prep checks & standard temperatures pre-filled.');
     }
 
     function quickFillClosingCheck() {
@@ -3439,7 +3439,7 @@ service cloud.firestore {
       if (corr && !corr.value) corr.value = 'N/A';
       const notes = document.getElementById('daily-notes');
       if (notes && !notes.value) notes.value = 'Closing two-stage Jantex clean complete, Gozney Arc off & LPG in shed, Wales commercial recycling segregated.';
-      showToast('🌙 Evening closing checks pre-filled. Ready to sign!');
+      showToast('🌙 Service & close checks pre-filled. Ready to sign!');
     }
 
     function quickFillStandardDailyPass() {
