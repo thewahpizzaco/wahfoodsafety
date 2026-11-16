@@ -1064,7 +1064,7 @@
           <!-- SECTION 1: PERSONAL HYGIENE, FITNESS TO WORK & DOMESTIC SEPARATION CHECKBOXES -->
           <div id="daily-hygiene-fields" style="background:#f8f9fe; padding:1rem; border-radius:var(--argon-radius); border:1px solid var(--argon-border); margin-bottom:1rem;">
             <div class="section-head-bar">
-              <h4>🧼 1. Personal Hygiene, Fitness to Work (48h Rule) & Domestic Kitchen Separation</h4>
+              <h4>🧼 1. Personal Hygiene & Domestic Kitchen Separation</h4>
               <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllCheckboxesInContainer('daily-hygiene-fields', true)">☑️ Tick Section</button>
             </div>
             <div class="check-grid">
@@ -1112,7 +1112,7 @@
           <!-- SECTION 2: PREP DAY CONTROLS -->
           <div id="daily-prep-fields" style="background:#f8f9fe; padding:1rem; border-radius:var(--argon-radius); border:1px solid var(--argon-border); margin-bottom:1rem;">
             <div class="section-head-bar">
-              <h4>🥣 2. Prep-Day Controls (24h Room-Temp Dough, ≤90m Cooling & 3-Day Stock Labels)</h4>
+              <h4>🥣 2. Dough Prep, Cooling & Stock Rotation</h4>
               <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllCheckboxesInContainer('daily-prep-fields', true)">☑️ Tick Section</button>
             </div>
             <div class="form-grid" style="max-width:340px; margin-bottom:0.75rem;">
@@ -1153,7 +1153,7 @@
           <!-- SECTION 3: TRADING DAY OPENING & SERVICE CONTROLS -->
           <div id="daily-trading-fields" style="background:#f8f9fe; padding:1rem; border-radius:var(--argon-radius); border:1px solid var(--argon-border); margin-bottom:1rem;">
             <div class="section-head-bar">
-              <h4>🔥 3. Trading-Day Controls (Fridge, LPG Soapy Water, Gozney Arc & Acrylamide)</h4>
+              <h4>🔥 3. Service Temperatures, LPG Leak Test & Acrylamide Control</h4>
               <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllCheckboxesInContainer('daily-trading-fields', true)">☑️ Tick Section</button>
             </div>
             <div class="form-grid" style="margin-bottom:0.75rem;">
@@ -1224,7 +1224,7 @@
           <!-- SECTION 4: CLOSING CHECKS -->
           <div id="daily-closing-fields" style="background:#f8f9fe; padding:1rem; border-radius:var(--argon-radius); border:1px solid var(--argon-border); margin-bottom:1rem;">
             <div class="section-head-bar">
-              <h4>🌙 4. Closing Checks (End of Prep / End of Trading Service)</h4>
+              <h4>🌙 4. Closing Sanitisation, LPG Shutoff & Wales Recycling</h4>
               <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllCheckboxesInContainer('daily-closing-fields', true)">☑️ Tick Section</button>
             </div>
             <div class="form-grid" style="max-width:340px; margin-bottom:0.75rem;">
@@ -1659,15 +1659,15 @@
     <section id="tab-records" class="tab-pane" aria-label="Signed Records and Weekly Archive">
       <div class="section-banner">
         <div>
-          <h2>📚 Permanent Signed Records & Collapsible Weekly Archive</h2>
-          <p>Current unreviewed records appear first. Signed reviews move covered daily checks and deliveries into collapsible archive folders without altering evidence.</p>
+          <h2>📚 Food Safety Diary & Records Archive</h2>
+          <p>Inspect signed daily logs, delivery receipts, temperature monitoring, and archived 4-week reviews.</p>
         </div>
         <button class="btn btn-sm btn-primary owner-only" onclick="switchMainTab('system')">📄 Export PDF / CSV</button>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <h3>Filter & Search Complete Diary</h3>
+          <h3>Search & Filter Diary</h3>
           <div style="display:flex; gap:8px; flex-wrap:wrap;">
             <input type="text" id="filter-search" aria-label="Search records" class="form-control" style="width:200px;" placeholder="Search readings, notes..." oninput="renderRecordsTab()">
             <select id="filter-type" aria-label="Filter by record type" class="form-control" style="width:170px;" onchange="renderRecordsTab()">
@@ -1685,10 +1685,10 @@
           </div>
         </div>
         <div class="card-body">
-          <h4 style="margin-top:0; color:var(--argon-heading);">🟢 Current & Unreviewed Records</h4>
+          <h4 style="margin-top:0; color:var(--argon-heading);">🟢 Active Logbook (Ready for Review)</h4>
           <div id="unreviewed-records-list"></div>
 
-          <h4 style="margin-top:2rem; color:var(--argon-heading);">🗄️ Signed Weekly / Period Archives (Collapsible Evidence History)</h4>
+          <h4 style="margin-top:2rem; color:var(--argon-heading);">🗄️ Archived Period Reviews</h4>
           <div id="archived-records-list"></div>
         </div>
       </div>
@@ -1700,8 +1700,8 @@
     <section id="tab-documents" class="tab-pane" aria-label="Written Safe Methods, Compliance Documents and Premises Gallery">
       <div class="section-banner">
         <div>
-          <h2>🗂️ Written HACCP Safe Methods, Document Vault & Premises Gallery</h2>
-          <p>Includes your written Pizza Process Flow Diagram & SFBB Safe Methods (for Cardiff Council EHO inspection), Document Vault, and Captioned Setup Photos.</p>
+          <h2>🗂️ HACCP Safe Methods, Document Vault & Photo Gallery</h2>
+          <p>Written pizza process flow, SFBB safe methods, compliance certificates, and premises photos for Cardiff Council SRS inspection.</p>
         </div>
         <button class="btn btn-sm btn-default no-print" onclick="window.print()">🖨️ Print Safe Methods</button>
       </div>
@@ -1738,14 +1738,22 @@
               <h4>6. Boxed Pickup Service</h4>
               <div><strong>Control:</strong> Direct collection on time in new food-grade pizza boxes (no hot-holding). Dairy-free Marinara orders clearly box-labelled. LPG leak-checked with soapy water before every session.</div>
             </div>
+            <div class="haccp-step-box">
+              <h4>7. Food Contact Materials & Packaging</h4>
+              <div><strong>Control:</strong> Certified food-grade pizza boxes & greaseproof liner sheets stored dry off the floor in sealed clean containers. 1-step-forward order records retained for customer recall traceability.</div>
+            </div>
+            <div class="haccp-step-box">
+              <h4>8. Waste, FOG & Water Potability</h4>
+              <div><strong>Control:</strong> Welsh Water mains potable supply. Commercial food scraps and cheese residues scraped into separate Wales Workplace Commercial Recycling food caddy (zero fats, oils, or food solids down domestic drains).</div>
+            </div>
           </div>
-          <div style="font-size:0.82rem; color:var(--argon-text); background:#f6f9fc; padding:0.75rem 1rem; border-radius:var(--argon-radius); border:1px solid var(--argon-border);">
-            <strong>SFBB 5-Pillar Summary:</strong>
-            (1) <strong>Cross-Contamination:</strong> Strictly vegetarian 3-pizza menu (zero raw meat/poultry/fish on premises); dedicated 2nd handwash sink with Jantex antibacterial soap.
-            (2) <strong>Cleaning:</strong> Two-stage cleaning using disposable blue roll and Jantex Multi-Surface Sanitiser (following bottle label dilution/contact time).
-            (3) <strong>Chilling:</strong> ≤ 4°C fridge target, ≤ 90 min cooling for cooked toppings.
-            (4) <strong>Cooking:</strong> > 400°C Gozney Arc bake, ≥ 75°C topping reheat, acrylamide char management.
-            (5) <strong>Management:</strong> 48-hour sickness exclusion rule, digital penetration probe iced & boiling water calibration, signed immutable daily/weekly records.
+          <div style="font-size:0.82rem; color:var(--argon-text); background:#f6f9fc; padding:0.75rem 1rem; border-radius:var(--argon-radius); border:1px solid var(--argon-border); line-height:1.5;">
+            <strong>SFBB Safe Methods & HACCP Pillar Summary:</strong><br>
+            • <strong>Cross-Contamination:</strong> Strictly vegetarian pizza menu (zero raw meat/poultry/fish on premises); dedicated 2nd handwash sink with Jantex antibacterial soap; clear coeliac disclaimer regarding airborne wheat flour.<br>
+            • <strong>Cleaning:</strong> Two-stage cleaning using disposable blue roll and Jantex Multi-Surface Sanitiser (BS EN 1276, adhering strictly to manufacturer dilution and contact time).<br>
+            • <strong>Chilling & Time Limits:</strong> ≤ 4°C fridge target, ≤ 90 min rapid cooling for cooked toppings; ambient service toppings monitored under the 4-hour rule.<br>
+            • <strong>Cooking & Baking:</strong> > 400°C Gozney Arc bake, ≥ 75°C core reheat for cooked toppings, semolina peel dusting & active peel turning for acrylamide char prevention.<br>
+            • <strong>Management & Waste:</strong> 48-hour sickness exclusion rule, monthly digital probe calibration, 5-year LPG hose checks, signed immutable records, and Wales 2024 commercial recycling separation.
           </div>
         </div>
       </div>
@@ -1856,8 +1864,8 @@
     <section id="tab-allergens" class="tab-pane" aria-label="14 UK Regulated Allergens Matrix">
       <div class="section-banner">
         <div>
-          <h2>🌾 UK 14 Regulated Allergens — Menu Matrix, Signposting & Ingredient Register</h2>
-          <p>Includes distance-selling / takeaway allergen signposting policy, interactive 14-allergen matrix, and supplier label evidence.</p>
+          <h2>🌾 14 UK Allergens — Menu Matrix & Signposting</h2>
+          <p>Takeaway allergen declarations, shared-kitchen cross-contact notices, and verified supplier ingredients.</p>
         </div>
         <div style="display:flex; gap:8px;">
           <button class="btn btn-sm btn-primary owner-only" onclick="openAddMenuItemModal()">+ Add Menu / Recipe Item</button>
@@ -1867,7 +1875,7 @@
 
       <div class="card">
         <div class="card-header">
-          <h3>📢 Customer Allergen Signposting & Box-Labelling Protocol (Non-Prepacked / Distance Selling)</h3>
+          <h3>📢 Customer Allergen Signposting & Collection Protocol</h3>
           <span class="badge badge-info">UK Food Information Regulations & Wales FHRS</span>
         </div>
         <div class="card-body" style="font-size:0.85rem;">
@@ -1931,8 +1939,8 @@
     <section id="tab-staff" class="tab-pane" aria-label="Staff, Cleaning Schedule and Chemical Register">
       <div class="section-banner">
         <div>
-          <h2>🧴 Cleaning Schedule, Jantex Chemical Register & Operator Fitness Policy</h2>
-          <p>Separate editable Cleaning Schedule and Chemical Register using your exact product labels. Never invent a contact time.</p>
+          <h2>🧴 Cleaning Schedule, Chemical Register & 48h Health Policy</h2>
+          <p>Two-stage cleaning procedures, Jantex sanitiser dilution and contact times, and operator hygiene standards.</p>
         </div>
       </div>
 
@@ -2019,8 +2027,8 @@
     <section id="tab-system" class="tab-pane owner-only" aria-label="System Exports, EHO Links and Backups">
       <div class="section-banner">
         <div>
-          <h2>⚙️ Inspection Exports, Read-Only EHO Link, Cloud Sync & Complete Backup</h2>
-          <p>Generate records-only PDFs/CSVs, bundle documents, create URL-shareable Read-Only EHO links, manage test data, or download a complete ZIP backup.</p>
+          <h2>⚙️ System Tools, EHO Links & Complete Backup</h2>
+          <p>Generate inspection PDFs/CSVs, manage secure EHO read-only links, sync cloud data, and download offline backups.</p>
         </div>
       </div>
 
