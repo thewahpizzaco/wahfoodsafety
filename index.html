@@ -1078,6 +1078,19 @@
                   <div class="check-card-sub">Burner off, cylinder valve firmly closed, and LPG stored in outdoor shed (Leave unticked if Prep-only).</div>
                 </div>
               </label>
+
+              <label class="check-card">
+                <input type="checkbox" id="chk-closing-recycling" onchange="syncCheckCardStyle(this)"
+                  data-pass="Pass — Food waste caddies, clean cardboard/flour sacks, and tins/plastics segregated per Wales 2024 Workplace Recycling"
+                  data-fail="Action Taken — See Notes">
+                <div class="check-card-content">
+                  <div class="check-card-title">
+                    <span>Wales 2024 Commercial Recycling Segregated</span>
+                    <span class="check-status-pill">UNCHECKED / ACTION</span>
+                  </div>
+                  <div class="check-card-sub">Commercial packaging, tins, clean flour sacks, and food caddies separated per Cardiff Council rules.</div>
+                </div>
+              </label>
             </div>
           </div>
 
@@ -1429,6 +1442,19 @@
                   <span class="check-status-pill">UNCHECKED / ACTION</span>
                 </div>
                 <div class="check-card-sub">Penetration probe and IR thermometer verified; supplier labels match allergen matrix.</div>
+              </div>
+            </label>
+
+            <label class="check-card">
+              <input type="checkbox" id="chk-wk-gas-hose" onchange="syncCheckCardStyle(this)"
+                data-pass="Pass — Flexible LPG hose inspected along full length for wear/cracks; in-date per 5-year replacement schedule"
+                data-fail="Action Taken — Hose replaced immediately (See Notes)">
+              <div class="check-card-content">
+                <div class="check-card-title">
+                  <span>LPG Gas Hose Condition & 5-Year Expiry In-Date</span>
+                  <span class="check-status-pill">UNCHECKED / ACTION</span>
+                </div>
+                <div class="check-card-sub">Hose checked along full length for cracks or hardening; verified within 5-year replacement date (BS 3212).</div>
               </div>
             </label>
           </div>
@@ -2427,6 +2453,15 @@ service cloud.firestore {
             fileName: 'Wah_Pizza_Written_HACCP_And_Safe_Methods.txt',
             archived: false,
             fileDataUrl: 'data:text/plain;base64,' + utf8ToBase64('THE WAH PIZZA CO. WRITTEN HACCP & SFBB SAFE METHODS:\n1. Purchase & Delivery: A Di Maria, Tesco, Lidl. Chilled <=4-5C.\n2. Storage: Domestic fridge <=4C, commercial segregation, 3-day open stock labels.\n3. 24h Room-Temp Dough: Flour, water, salt, yeast only (low water activity, competitive yeast fermentation, ambient temp logged, baked >400C).\n4. Pre-cooking & Cooling: Mushroom toppings cooled <=90 mins to <=4C fridge.\n5. Baking & Reheating: Gozney Arc >400C, toppings reheated >=75C, acrylamide controlled via active turning peel.\n6. Hygiene & Management: 48h sickness exclusion, dedicated 2nd handwash sink, Janex two-stage cleaning with disposable blue roll.')
+          },
+          {
+            id: 'DOC-05',
+            title: 'LPG Gas Hose & 37mbar Regulator 5-Year Replacement & Annual Condition Record',
+            category: 'LPG / Gas Safety',
+            expiry: 'Inspected: Oct 2026 | Replacement Due: Oct 2029 (BS 3212 / BS EN 16436)',
+            fileName: 'LPG_Hose_Inspection_And_Expiry_Log.txt',
+            archived: false,
+            fileDataUrl: 'data:text/plain;base64,' + utf8ToBase64('THE WAH PIZZA CO. — ANNUAL LPG HOSE & REGULATOR RECORD:\n\n1. Equipment: Gozney Arc Outdoor LPG Pizza Oven.\n2. Fuel: Propane (Red Cylinder) with 37mbar fixed low-pressure regulator.\n3. Hose Specification: BS 3212 Class 2 / BS EN 16436-1 Class 2 reinforced orange LPG hose.\n4. Visual Inspection Standard: Full length checked for cracking, stiffness, blistering, or perishing. Jubilee clips checked firm.\n5. Leak Testing Standard: Soapy water bubble test performed on all connections prior to lighting.\n6. 5-Year Replacement Cycle: Per UKLPG Code of Practice 24 and HSE rules, flexible rubber gas hoses must be replaced at a maximum of 5 years from manufacture date printed on hose.\n7. Current Inspection Date: October 2026 (Condition verified intact, flexible, zero cracks).\n8. Next Mandatory Replacement Due: October 2029 (or immediately if surface wear appears).')
           }
         ],
         gallery: [
@@ -2510,7 +2545,13 @@ service cloud.firestore {
           systemSettings: { ...def.systemSettings, ...(saved.systemSettings || {}) },
           businessProfile: { ...def.businessProfile, ...(saved.businessProfile || {}) },
           records: Array.isArray(saved.records) ? saved.records : def.records,
-          documents: (Array.isArray(saved.documents) ? saved.documents : def.documents).map(d => ({ archived: false, ...d })),
+          documents: (() => {
+            const savedList = (Array.isArray(saved.documents) ? saved.documents : def.documents).map(d => ({ archived: false, ...d }));
+            def.documents.forEach(d => {
+              if (!savedList.some(x => x.id === d.id)) savedList.push(d);
+            });
+            return savedList;
+          })(),
           gallery: Array.isArray(saved.gallery) ? saved.gallery : def.gallery,
           menuAllergens: Array.isArray(saved.menuAllergens) ? saved.menuAllergens : def.menuAllergens,
           ingredientRegister: Array.isArray(saved.ingredientRegister) ? saved.ingredientRegister : def.ingredientRegister,
@@ -3437,6 +3478,7 @@ service cloud.firestore {
           closingFridgeTemp: (dayType !== 'Closed') ? (document.getElementById('daily-closing-fridge').value ? document.getElementById('daily-closing-fridge').value + '°C' : 'Not recorded') : 'N/A',
           closingHygiene: (dayType !== 'Closed') ? readCheckValue('chk-closing-hygiene') : 'N/A',
           closingLpg: (dayType !== 'Closed') ? readCheckValue('chk-closing-lpg') : 'N/A',
+          walesCommercialRecycling: (dayType !== 'Closed') ? readCheckValue('chk-closing-recycling') : 'N/A',
           problems: document.getElementById('daily-problems').value.trim() || 'None',
           correctiveAction: document.getElementById('daily-corrective').value.trim() || 'N/A',
           notes: document.getElementById('daily-notes').value.trim() || 'None'
@@ -3501,6 +3543,7 @@ service cloud.firestore {
           missingDays: readCheckValue('chk-wk-missing'),
           alarmsAndExceptions: readCheckValue('chk-wk-alarms'),
           probeEvidence: readCheckValue('chk-wk-probe'),
+          lpgHoseConditionAndExpiry: readCheckValue('chk-wk-gas-hose'),
           notes: document.getElementById('wk-notes').value.trim() || 'All HACCP & SFBB Safe Methods operating effectively.'
         };
       }
