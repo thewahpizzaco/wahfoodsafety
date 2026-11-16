@@ -8,8 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Wah Safety">
   <link rel="manifest" href="./manifest.json">
-  <link rel="icon" type="image/svg+xml" href="./icon.svg">
-  <link rel="apple-touch-icon" href="./icon.svg">
+  <link rel="icon" type="image/png" href="./icon-192.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
   <meta name="mobile-web-app-capable" content="yes">
   <title>The Wah Pizza Co. | Private Food Safety & HACCP Manager</title>
 
@@ -838,8 +838,9 @@
   <div id="auth-gate-overlay" role="dialog" aria-labelledby="auth-gate-title">
     <div class="auth-card">
       <div style="text-align:center; margin-bottom:1.25rem;">
-        <span class="badge badge-primary">Private Food Safety Portal</span>
-        <h2 id="auth-gate-title" style="margin:8px 0 4px 0; color:var(--argon-heading);">🍕 The Wah Pizza Co.</h2>
+        <img src="./logo.png" alt="The Wah Pizza Co. Logo" style="width:72px; height:72px; border-radius:50%; margin-bottom:10px; box-shadow:0 3px 8px rgba(0,0,0,0.15); background:#fff; padding:3px;">
+        <div><span class="badge badge-primary">Private Food Safety Portal</span></div>
+        <h2 id="auth-gate-title" style="margin:8px 0 4px 0; color:var(--argon-heading);">The Wah Pizza Co.</h2>
         <p style="margin:0; font-size:0.82rem; color:var(--argon-muted);">Cardiff Home Pickup Pop-Up • Owner Verification</p>
       </div>
 
@@ -889,9 +890,12 @@
   <!-- STREAMLINED ARGON HERO HEADER (4 Redundant Stat Boxes Removed) -->
   <header class="argon-header">
     <div class="header-top">
-      <div>
-        <h1 class="brand-title">🍕 THE WAH PIZZA CO.</h1>
-        <div class="brand-subtitle">Home Pickup Pop-Up • Cardiff • Fast Checkbox HACCP & SFBB System</div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <img src="./logo.png" alt="The Wah Pizza Co. Logo" style="width:44px; height:44px; border-radius:50%; box-shadow:0 2px 6px rgba(0,0,0,0.25); background:#fff; padding:2px; flex-shrink:0;">
+        <div>
+          <h1 class="brand-title" style="margin:0; font-size:1.15rem; font-weight:800; letter-spacing:0.5px; color:#fff;">THE WAH PIZZA CO.</h1>
+          <div class="brand-subtitle">Home Pickup Pop-Up • Cardiff • Food Safety & HACCP Manager</div>
+        </div>
       </div>
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <span class="badge badge-success" id="uk-clock-badge">Europe/London</span>
