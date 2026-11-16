@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5e72e4"/>
+      <stop offset="100%" stop-color="#324cdd"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#172b4d" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  <g filter="url(#shadow)">
+    <!-- Shield Outline -->
+    <path d="M256 64 L396 112 V240 C396 336 256 424 256 424 C256 424 116 336 116 240 V112 Z" fill="#ffffff" opacity="0.16"/>
+    <!-- Pizza Slice -->
+    <text x="256" y="300" font-size="220" text-anchor="middle" dominant-baseline="middle">🍕</text>
+  </g>
+  <text x="256" y="440" font-family="-apple-system, system-ui, sans-serif" font-size="34" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="2">WAH SAFETY</text>
+</svg>

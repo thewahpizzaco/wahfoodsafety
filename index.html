@@ -7,6 +7,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Wah Safety">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/svg+xml" href="./icon.svg">
+  <link rel="apple-touch-icon" href="./icon.svg">
+  <meta name="mobile-web-app-capable" content="yes">
   <title>The Wah Pizza Co. | Private Food Safety & HACCP Manager</title>
 
   <!-- Google Fonts: Open Sans (Argon Design System Standard) -->
@@ -4837,6 +4841,15 @@ service cloud.firestore {
       // 2. Also initialize SDK for desktop environments
       initFirebaseIfConfigured();
       refreshAllUI();
+
+      // Register Progressive Web App (PWA) Service Worker for offline kitchen resilience
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('Wah Pizza PWA Service Worker registered:', reg.scope);
+        }).catch((err) => {
+          console.warn('PWA SW registration note:', err);
+        });
+      }
 
       // Auto-detect ?eho=TOKEN URL parameter for EHO Read-Only link sharing
       const urlParams = new URLSearchParams(window.location.search);
