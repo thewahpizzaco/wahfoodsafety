@@ -712,6 +712,7 @@
       <div style="background:#f8f9fe; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; margin-bottom:12px; font-size:0.75rem; color:var(--argon-heading); text-align:center;">
         🔒 Approved Owner: <strong>beeston.mail@gmail.com</strong>
       </div>
+      <div id="auth-modal-error-box" style="display:none; margin-bottom:12px; padding:10px 12px; background:#fff5f5; border-left:4px solid var(--argon-danger); color:#d9254b; font-size:0.8rem; border-radius:4px; line-height:1.4;"></div>
 
       <!-- Offline Emergency PIN Fallback -->
       <details style="font-size:0.8rem; color:var(--argon-muted); margin-bottom:12px; cursor:pointer;">
@@ -2667,8 +2668,13 @@ service cloud.firestore {
     }
 
     async function signInWithGoogle() {
+      const errBox = document.getElementById('auth-modal-error-box');
+      if (errBox) { errBox.style.display = 'none'; errBox.innerHTML = ''; }
+
       if (!window.firebase || !firebase.auth) {
-        showToast('Firebase Auth SDK not ready. Please check internet connection.', true);
+        const msg = 'Firebase Auth SDK not ready. Please check your internet connection.';
+        if (errBox) { errBox.style.display = 'block'; errBox.textContent = msg; }
+        showToast(msg, true);
         return;
       }
       const auth = firebase.auth();
@@ -2682,13 +2688,21 @@ service cloud.firestore {
         handleAuthenticatedUser(user);
       } catch (error) {
         console.error("Google Sign-In Error:", error);
-        if (error.code === 'auth/popup-blocked') {
-          showToast('Login popup was blocked by your browser. Please allow popups or open directly.', true);
+        let userMsg = error.message;
+        if (error.code === 'auth/operation-not-allowed') {
+          userMsg = '<strong>Google Sign-In is not enabled yet in your Firebase Console.</strong><br>Please open your <a href="https://console.firebase.google.com/project/wahpizzafoodsafety/authentication/providers" target="_blank" style="color:var(--argon-primary); text-decoration:underline;">Firebase Console → Sign-in method</a>, click Google, and switch it to <strong>Enable</strong>.<br><em>In the meantime, you can unlock using the 4-digit Kitchen PIN (1968) below.</em>';
+        } else if (error.code === 'auth/unauthorized-domain') {
+          userMsg = '<strong>Domain not authorized:</strong> Please add this domain (' + window.location.hostname + ') to your <a href="https://console.firebase.google.com/project/wahpizzafoodsafety/authentication/settings" target="_blank" style="color:var(--argon-primary); text-decoration:underline;">Firebase Auth Authorized Domains</a>.<br><em>You can use the 4-digit Kitchen PIN (1968) below right now.</em>';
+        } else if (error.code === 'auth/popup-blocked') {
+          userMsg = '<strong>Popup blocked by browser:</strong> Please allow popups for localhost / Google Sites, or use the 4-digit Kitchen PIN below.';
         } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
-          showToast('Google Sign-In cancelled.');
-        } else {
-          showToast('Google Sign-In Error: ' + error.message, true);
+          userMsg = 'Google Sign-In window was closed before completing.';
         }
+        if (errBox) {
+          errBox.style.display = 'block';
+          errBox.innerHTML = userMsg;
+        }
+        showToast('Sign-In Error [' + error.code + ']', true);
       }
     }
 
