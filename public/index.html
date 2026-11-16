@@ -3548,6 +3548,22 @@
     /********************************************************************
      * 4B. DYNAMIC ACTION REMINDER SYSTEM (FRONT PAGE TO-CONFIRM ITEMS)
      ********************************************************************/
+    function getDaysSinceLatestRecord(recordType) {
+      const matching = (appState.records || []).filter(r => r.type === recordType && r.dateISO);
+      if (!matching.length) return null;
+      matching.sort((a, b) => (b.dateISO > a.dateISO ? 1 : -1));
+      const latestISO = matching[0].dateISO;
+      try {
+        const recordDate = new Date(latestISO + 'T00:00:00');
+        const today = new Date(getUKDateISO() + 'T00:00:00');
+        const diffTime = today - recordDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        return isNaN(diffDays) ? null : diffDays;
+      } catch (e) {
+        return null;
+      }
+    }
+
     function renderActionReminders() {
       const container = document.getElementById('confirm-checklist-container');
       const titleEl = document.getElementById('confirm-checklist-title');
@@ -3555,51 +3571,115 @@
       const itemsEl = document.getElementById('confirm-checklist-items');
       if (!container || !itemsEl) return;
 
-      // 1. Check Jantex Multi-Surface Sanitiser in Chemicals Register
+      // 1. Check Periodic Probe Verification (Monthly - 30 days)
+      const probeDays = getDaysSinceLatestRecord('Probe Verification');
+      const probePending = (probeDays === null || probeDays >= 30);
+      const probeSoon = (probeDays !== null && probeDays >= 23 && probeDays < 30);
+
+      // 2. Check Periodic 4-Week / Monthly Review (Every 28 days)
+      const reviewDays = getDaysSinceLatestRecord('Weekly Review');
+      const reviewPending = (reviewDays === null || reviewDays >= 28);
+      const reviewSoon = (reviewDays !== null && reviewDays >= 21 && reviewDays < 28);
+
+      // Update Sub-Button Badges on the Launcher Grid
+      const probeBtn = document.getElementById('subbtn-sub-probe');
+      if (probeBtn) {
+        const subDesc = probeBtn.querySelector('.sub-desc');
+        if (subDesc) {
+          if (probePending) {
+            subDesc.innerHTML = `<span style="color:#e53e3e; font-weight:700;">⚠️ Due Now (${probeDays === null ? 'Never' : probeDays + 'd ago'})</span>`;
+          } else if (probeSoon) {
+            subDesc.innerHTML = `<span style="color:#dd6b20; font-weight:600;">⏳ Due in ${30 - probeDays}d</span>`;
+          } else {
+            subDesc.innerHTML = `<span style="color:#38a169;">✓ Valid (${probeDays}d ago)</span>`;
+          }
+        }
+      }
+
+      const reviewBtn = document.getElementById('subbtn-sub-weekly');
+      if (reviewBtn) {
+        const subDesc = reviewBtn.querySelector('.sub-desc');
+        if (subDesc) {
+          if (reviewPending) {
+            subDesc.innerHTML = `<span style="color:#e53e3e; font-weight:700;">⚠️ Due Now (${reviewDays === null ? 'Never' : reviewDays + 'd ago'})</span>`;
+          } else if (reviewSoon) {
+            subDesc.innerHTML = `<span style="color:#dd6b20; font-weight:600;">⏳ Due in ${28 - reviewDays}d</span>`;
+          } else {
+            subDesc.innerHTML = `<span style="color:#38a169;">✓ Valid (${reviewDays}d ago)</span>`;
+          }
+        }
+      }
+
+      // 3. Setup Actions (Jantex, Gas cert, Insurance, Reheat target)
       const jantexChem = appState.chemicals.find(c => c.product.toLowerCase().includes('jantex') && c.product.toLowerCase().includes('sanitiser'));
       const jantexPending = !jantexChem || 
         jantexChem.dilution.toUpperCase().includes('TO CONFIRM') || 
         jantexChem.contactTime.toUpperCase().includes('TO CONFIRM');
 
-      // 2. Check Commercial LPG Gas Safety Certificate in Documents Vault
       const gasDoc = appState.documents.find(d => !d.archived && (d.category === 'LPG / Gas Safety' || d.title.toLowerCase().includes('gas safety')));
       const gasPending = !gasDoc || gasDoc.expiry.toUpperCase().includes('TO CONFIRM');
 
-      // 3. Check Public Liability Insurance in Documents Vault
       const insDoc = appState.documents.find(d => !d.archived && (d.category === 'Insurance' || d.title.toLowerCase().includes('insurance')));
       const insPending = !insDoc || insDoc.expiry.toUpperCase().includes('TO CONFIRM');
 
-      // 4. Pre-Cooked Topping Reheat Target (Stored in profile or confirmed via toggle)
       const reheatConfirmed = appState.businessProfile.reheatTargetConfirmed === true;
 
-      const actions = [
+      // Group actions: High-priority periodic operational audits first!
+      const periodicActions = [
+        {
+          id: 'remind-probe',
+          isPeriodic: true,
+          title: '🌡️ Monthly Digital Probe Calibration (Boiling / Ice Water Test)',
+          isPending: probePending,
+          isSoon: probeSoon,
+          pendingDesc: probeDays === null 
+            ? 'No calibration record found. Monthly verification required under Cardiff SRS / SFBB standards.' 
+            : `Last calibrated ${probeDays} days ago (Overdue by ${probeDays - 30} days). Test in ice/boiling water.`,
+          resolvedDesc: `Calibrated & Accurate (Tested ${probeDays} days ago — Next check due in ${30 - probeDays} days).`,
+          actionBtn: `<button class="btn btn-sm ${probePending ? 'btn-danger' : 'btn-secondary'}" onclick="switchSubTabById('sub-probe')">Calibrate Probe →</button>`
+        },
+        {
+          id: 'remind-review',
+          isPeriodic: true,
+          title: '📅 4-Week SFBB Manager Review & Gas Hose Audit',
+          isPending: reviewPending,
+          isSoon: reviewSoon,
+          pendingDesc: reviewDays === null
+            ? 'No 4-week review signed. Monthly audit required under Cardiff SRS / SFBB standards.'
+            : `Last signed ${reviewDays} days ago (Overdue by ${reviewDays - 28} days). Review logs & verify 5-year gas hose condition.`,
+          resolvedDesc: `4-Week Review Current (Signed ${reviewDays} days ago — Next due in ${28 - reviewDays} days).`,
+          actionBtn: `<button class="btn btn-sm ${reviewPending ? 'btn-danger' : 'btn-secondary'}" onclick="switchSubTabById('sub-weekly')">Open 4-Week Review →</button>`
+        }
+      ];
+
+      const setupActions = [
         {
           id: 'act-jantex',
-          title: '1. Jantex Multi-Surface Sanitiser Label Dilution & Contact Time',
+          title: '🧴 Jantex Multi-Surface Sanitiser Label Dilution & Contact Time',
           isPending: jantexPending,
           pendingDesc: 'Dilution ratio and contact time need to be verified from your bottle label.',
           resolvedDesc: `Verified on label: Dilution "${jantexChem?.dilution || 'Neat'}", Contact Time: "${jantexChem?.contactTime || '30s'}"`,
-          actionBtn: `<button class="btn btn-sm btn-secondary" onclick="switchMainTab('staff')">Open Chemical Register →</button>`
+          actionBtn: `<button class="btn btn-sm btn-secondary" onclick="switchMainTab('staff')">Chemical Register →</button>`
         },
         {
           id: 'act-gas',
-          title: '2. Commercial LPG Gas Safety Certificate',
+          title: '🔥 Commercial LPG Gas Safety Certificate',
           isPending: gasPending,
           pendingDesc: 'Awaiting inspection and certificate upload in Document Vault.',
           resolvedDesc: `Uploaded in Vault: "${gasDoc?.title || 'Gas Safety'}" (${gasDoc?.expiry || 'Valid'})`,
-          actionBtn: `<button class="btn btn-sm btn-secondary" onclick="switchMainTab('documents')">Open Document Vault →</button>`
+          actionBtn: `<button class="btn btn-sm btn-secondary" onclick="switchMainTab('documents')">Document Vault →</button>`
         },
         {
           id: 'act-ins',
-          title: '3. Public Liability Insurance Policy',
+          title: '🛡️ Public Liability Insurance Policy',
           isPending: insPending,
           pendingDesc: 'Awaiting policy purchase & upload prior to trading launch.',
           resolvedDesc: `Uploaded in Vault: "${insDoc?.title || 'Insurance'}" (${insDoc?.expiry || 'Valid'})`,
-          actionBtn: `<button class="btn btn-sm btn-secondary" onclick="switchMainTab('documents')">Open Document Vault →</button>`
+          actionBtn: `<button class="btn btn-sm btn-secondary" onclick="switchMainTab('documents')">Document Vault →</button>`
         },
         {
           id: 'act-reheat',
-          title: '4. Pre-Cooked Topping Reheat Target (≥ 75°C)',
+          title: '🍕 Pre-Cooked Topping Reheat Target (≥ 75°C)',
           isPending: !reheatConfirmed,
           pendingDesc: 'Operating target set to ≥ 75°C. Confirm agreement with Cardiff Council EHO standards.',
           resolvedDesc: 'Confirmed: Operating target verified as ≥ 75°C core reheat for cooked toppings.',
@@ -3607,38 +3687,50 @@
         }
       ];
 
-      const pendingCount = actions.filter(a => a.isPending).length;
+      const allActions = [...periodicActions, ...setupActions];
+      const urgentCount = allActions.filter(a => a.isPending).length;
+      const soonCount = allActions.filter(a => a.isSoon).length;
 
-      if (pendingCount === 0) {
+      if (urgentCount === 0) {
         container.style.borderColor = 'rgba(45, 206, 137, 0.45)';
         container.style.background = '#f7fdfa';
-        titleEl.innerHTML = `<span>🎉 All Setup & Pre-Launch Actions Resolved!</span>`;
+        titleEl.innerHTML = `<span>🎉 All Periodic Checks & Setup Actions Up-To-Date!</span>`;
         badgeEl.className = 'badge badge-success';
         badgeEl.textContent = 'All Complete ✓';
       } else {
-        container.style.borderColor = 'rgba(251, 99, 64, 0.35)';
-        container.style.background = '#fffdf9';
-        titleEl.innerHTML = `<span>⚠️ ${pendingCount} Pending Setup Action${pendingCount > 1 ? 's' : ''} Remaining (Tap to expand)</span>`;
-        badgeEl.className = 'badge badge-warning';
-        badgeEl.textContent = `${pendingCount} Pending`;
+        const hasOverduePeriodic = periodicActions.some(a => a.isPending);
+        container.style.borderColor = hasOverduePeriodic ? 'rgba(235, 87, 87, 0.5)' : 'rgba(251, 99, 64, 0.35)';
+        container.style.background = hasOverduePeriodic ? '#fffdfb' : '#fffdf9';
+        titleEl.innerHTML = `<span>⚠️ ${urgentCount} Action${urgentCount > 1 ? 's' : ''} Due / Pending (Tap to expand)</span>`;
+        badgeEl.className = hasOverduePeriodic ? 'badge badge-danger' : 'badge badge-warning';
+        badgeEl.textContent = `${urgentCount} Due`;
       }
 
-      itemsEl.innerHTML = actions.map(act => `
-        <div class="confirm-item" style="${act.isPending ? '' : 'opacity: 0.8;'}">
-          <div style="flex:1; min-width:240px;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span class="badge ${act.isPending ? 'badge-warning' : 'badge-success'}" style="font-size:0.65rem; padding:2px 6px;">
-                ${act.isPending ? 'TO CONFIRM' : '✓ RESOLVED'}
-              </span>
-              <strong>${act.title}</strong>
+      itemsEl.innerHTML = allActions.map(act => {
+        let badgeHTML = '';
+        if (act.isPending) {
+          badgeHTML = `<span class="badge ${act.isPeriodic ? 'badge-danger' : 'badge-warning'}" style="font-size:0.65rem; padding:2px 6px;">${act.isPeriodic ? 'DUE NOW' : 'TO CONFIRM'}</span>`;
+        } else if (act.isSoon) {
+          badgeHTML = `<span class="badge badge-warning" style="font-size:0.65rem; padding:2px 6px;">DUE SOON</span>`;
+        } else {
+          badgeHTML = `<span class="badge badge-success" style="font-size:0.65rem; padding:2px 6px;">✓ CURRENT</span>`;
+        }
+
+        return `
+          <div class="confirm-item" style="${act.isPending ? 'background:#fff8f8; border-color:#fed7d7;' : 'opacity: 0.85;'}">
+            <div style="flex:1; min-width:240px;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                ${badgeHTML}
+                <strong>${act.title}</strong>
+              </div>
+              <div style="font-size:0.75rem; color:var(--argon-muted); margin-top:2px;">
+                ${act.isPending ? act.pendingDesc : act.resolvedDesc}
+              </div>
             </div>
-            <div style="font-size:0.75rem; color:var(--argon-muted); margin-top:2px;">
-              ${act.isPending ? act.pendingDesc : act.resolvedDesc}
-            </div>
+            <div>${act.actionBtn}</div>
           </div>
-          <div>${act.actionBtn}</div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function toggleReheatTargetConfirmation() {
