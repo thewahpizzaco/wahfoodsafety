@@ -5258,6 +5258,64 @@
       downloadBlob(new Blob([pdfBytes], { type: 'application/pdf' }), `Wah_Pizza_Records_${getUKDateISO()}.pdf`);
       showToast(`Exported ${recs.length} formatted records to PDF report.`);
     }
+
+    /********************************************************************
+     * 9. SEND DOCUMENTS PACK (PREVIEW, ZIP, SHARE SHEET, EMAIL COMPOSER)
+     ********************************************************************/
+    function renderSystemTab() {
+      const box = document.getElementById('pack-doc-checkboxes');
+      if (box) {
+        box.innerHTML = appState.documents.filter(d => !d.archived).map(d => `
+          <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px; font-size:0.84rem; cursor:pointer;">
+            <input type="checkbox" class="pack-doc-cb" value="${d.id}" checked>
+            <span><strong>${d.title}</strong> (${d.category}) — <em>${d.expiry}</em></span>
+          </label>
+        `).join('');
+      }
+
+      const baseUrl = window.location.origin + window.location.pathname;
+      const linksBody = document.getElementById('eho-links-table-body');
+      if (linksBody) {
+        linksBody.innerHTML = appState.ehoLinks.length === 0
+          ? `<tr><td colspan="6" style="color:var(--argon-muted);">No inspection links created yet.</td></tr>`
+          : appState.ehoLinks.map(l => {
+              const badgeClass = l.status === 'Active' ? 'badge-success' : (l.status === 'Revoked' ? 'badge-danger' : 'badge-warning');
+              const shareUrl = `${baseUrl}?eho=${l.token}`;
+              return `
+                <tr>
+                  <td>
+                    <strong>${l.token}</strong>
+                    <div style="font-size:0.75rem; color:var(--argon-muted);">${l.label}</div>
+                    <div style="font-size:0.7rem; font-family:monospace; color:var(--argon-primary); word-break:break-all;">?eho=${l.token}</div>
+                  </td>
+                  <td>${l.createdUK}</td>
+                  <td>${l.expiresUK}</td>
+                  <td><span class="badge ${badgeClass}">${l.status}</span></td>
+                  <td>${l.lastOpenedUK || 'Never opened'} (${l.openCount}x)</td>
+                  <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-info" onclick="openEhoReadOnlyInspection('${l.token}')">👁️ Open EHO View</button>
+                    <button class="btn btn-sm btn-secondary" onclick="copyEhoUrl('${shareUrl}')">📋 Copy Link</button>
+                    ${l.status === 'Active' ? `<button class="btn btn-sm btn-danger" onclick="revokeEhoInspectionLink('${l.token}')">Revoke</button>` : ''}
+                  </td>
+                </tr>
+              `;
+            }).join('');
+      }
+
+      const auditBox = document.getElementById('eho-audit-log-box');
+      if (auditBox) {
+        auditBox.innerHTML = appState.ehoAuditLog.length === 0
+          ? `<div>No EHO link events logged yet.</div>`
+          : appState.ehoAuditLog.map(e => `<div>[${e.ukTimestamp}] <strong>${e.event}</strong> — Token: ${e.token} (${e.detail})</div>`).join('');
+      }
+    }
+
+    function copyEhoUrl(url) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => showToast('Copied EHO Inspection Link to clipboard.'));
+      } else {
+        showToast('Share URL: ' + url);
+      }
     }
 
     function getSelectedPackDocs() {
