@@ -105,8 +105,9 @@
     /* Streamlined Argon Hero Header (Top 4 Stat Boxes Removed) */
     .argon-header {
       background: linear-gradient(87deg, #5e72e4 0, #825ee4 100%);
-      padding: 1.15rem 1.25rem 2.75rem 1.25rem;
+      padding: 0.65rem 1.15rem;
       color: #fff;
+      box-shadow: 0 2px 8px rgba(23,43,77,0.12);
     }
     .header-top {
       max-width: 1200px;
@@ -115,11 +116,11 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
     .brand-title {
-      font-size: 1.3rem;
-      font-weight: 700;
+      font-size: 1.05rem;
+      font-weight: 800;
       letter-spacing: 0.04em;
       text-transform: uppercase;
       margin: 0;
@@ -128,16 +129,51 @@
       gap: 8px;
     }
     .brand-subtitle {
-      font-size: 0.82rem;
-      opacity: 0.92;
-      margin-top: 2px;
+      display: none; /* Hidden to maximize screen real-estate */
     }
 
     /* Main Container */
     .main-container {
       max-width: 1200px;
-      margin: -1.65rem auto 0 auto;
+      margin: 0.75rem auto 0 auto;
       padding: 0 1rem;
+    }
+
+    /* Routine Shift View Selector (Morning vs Evening vs All) */
+    .shift-view-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 1rem;
+      background: #ffffff;
+      padding: 0.5rem;
+      border-radius: var(--argon-radius);
+      border: 1px solid var(--argon-border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      flex-wrap: wrap;
+    }
+    .shift-pill {
+      flex: 1;
+      min-width: 140px;
+      padding: 0.6rem 0.85rem;
+      font-size: 0.84rem;
+      font-weight: 700;
+      border-radius: var(--argon-radius);
+      border: 2px solid var(--argon-border);
+      background: #f8f9fe;
+      color: var(--argon-heading);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .shift-pill.active {
+      background: var(--argon-primary);
+      color: #ffffff;
+      border-color: var(--argon-primary);
+      box-shadow: 0 4px 6px rgba(50,50,93,.15);
     }
 
     /* OBVIOUS DESKTOP NAVIGATION BAR (6 Equal Visible Tabs) */
@@ -220,8 +256,9 @@
       }
       .nav-tabs { display: none; }
       .mobile-bottom-nav { display: grid !important; }
-      .argon-header { padding: 1rem 1rem 1.25rem 1rem; }
-      .main-container { margin-top: 0.75rem; }
+      .argon-header { padding: 0.55rem 0.75rem; }
+      .brand-title { font-size: 0.94rem; }
+      .main-container { margin-top: 0.5rem; padding: 0 0.5rem; }
     }
 
     /* CURRENT SECTION BREADCRUMB BANNER */
@@ -855,11 +892,11 @@
         <div class="card-header">
           <div>
             <h3>☀️ Daily Opening, Prep, Trading & Closing Checks</h3>
-            <div style="font-size:0.8rem; color:var(--argon-muted);">Tap each check card to verify. You can also use "Tick All Daily Checks" or "Fill Standard Temps" for rapid logging.</div>
+            <div style="font-size:0.8rem; color:var(--argon-muted);">Select your routine shift below (Morning vs Evening) for a focused, clean checklist.</div>
           </div>
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <button type="button" class="btn btn-sm btn-success" onclick="toggleAllCheckboxesInContainer('sub-daily', true)">☑️ Tick All Daily Checks</button>
-            <button type="button" class="btn btn-sm btn-info" onclick="quickFillStandardDailyPass()">⚡ Fill Standard Temps + Tick All</button>
+            <button type="button" class="btn btn-sm btn-success" onclick="toggleAllCheckboxesInContainer('sub-daily', true)">☑️ Tick Visible</button>
+            <button type="button" class="btn btn-sm btn-info" onclick="quickFillStandardDailyPass()">⚡ Quick-Fill Full Day</button>
           </div>
         </div>
         <div class="card-body">
@@ -873,11 +910,40 @@
             <button type="button" class="day-pill" data-day="Closed" onclick="selectDayTypePill('Closed')">🚪 Closed / Not Trading</button>
           </div>
 
-          <div class="form-grid" style="max-width:320px;">
-            <div class="form-group">
+          <div class="form-grid" style="max-width:320px; margin-bottom:1rem;">
+            <div class="form-group" style="margin-bottom:0;">
               <label class="form-label" for="daily-date">Record Date (UK)</label>
               <input type="date" id="daily-date" class="form-control">
             </div>
+          </div>
+
+          <!-- ROUTINE SHIFT SELECTOR: MORNING OPENING vs EVENING CLOSING -->
+          <div class="shift-view-bar" role="tablist">
+            <button type="button" class="shift-pill active" id="pill-shift-morning" onclick="switchShiftView('morning')">
+              <span>☀️ 1. Morning Opening & Prep</span>
+            </button>
+            <button type="button" class="shift-pill" id="pill-shift-evening" onclick="switchShiftView('evening')">
+              <span>🌙 2. Evening Service & Close</span>
+            </button>
+            <button type="button" class="shift-pill" id="pill-shift-all" onclick="switchShiftView('all')">
+              <span>📋 View Complete Day</span>
+            </button>
+          </div>
+
+          <!-- MORNING QUICK ACTION BANNER -->
+          <div id="morning-quick-bar" style="display:flex; justify-content:space-between; align-items:center; background:#ebf8ff; border:1px solid #bee3f8; padding:0.65rem 0.9rem; border-radius:var(--argon-radius); margin-bottom:1rem; flex-wrap:wrap; gap:8px;">
+            <div style="font-size:0.82rem; color:#2b6cb0;">
+              <strong>☀️ Morning Focus:</strong> Hygiene, 48h fitness, ambient dough, domestic separation & Gozney leak test.
+            </div>
+            <button type="button" class="btn btn-sm btn-info" onclick="quickFillOpeningCheck()">⚡ Fast Morning Opening Pass</button>
+          </div>
+
+          <!-- EVENING QUICK ACTION BANNER -->
+          <div id="evening-quick-bar" style="display:none; justify-content:space-between; align-items:center; background:#fffaf0; border:1px solid #feebc8; padding:0.65rem 0.9rem; border-radius:var(--argon-radius); margin-bottom:1rem; flex-wrap:wrap; gap:8px;">
+            <div style="font-size:0.82rem; color:#9c4221;">
+              <strong>🌙 Evening Focus:</strong> Closing fridge temp, Jantex sanitise, Gozney shut off & LPG in shed, Wales recycling.
+            </div>
+            <button type="button" class="btn btn-sm btn-info" onclick="quickFillClosingCheck()">🌙 Fast Evening Closing Pass</button>
           </div>
 
           <!-- SECTION 1: PERSONAL HYGIENE, FITNESS TO WORK & DOMESTIC SEPARATION CHECKBOXES -->
@@ -1092,6 +1158,10 @@
                 </div>
               </label>
             </div>
+          </div>
+
+          <div id="morning-next-btn-box" style="text-align:center; margin:1rem 0;">
+            <button type="button" class="btn btn-primary" onclick="switchShiftView('evening')">Ready for Evening Closing Checks? Proceed to Close →</button>
           </div>
 
           <div class="form-grid">
@@ -3300,16 +3370,82 @@ service cloud.firestore {
       exp.value = '';
     }
 
+    let currentShiftView = 'morning';
+
+    function switchShiftView(mode) {
+      currentShiftView = mode;
+      const pMorning = document.getElementById('pill-shift-morning');
+      const pEvening = document.getElementById('pill-shift-evening');
+      const pAll = document.getElementById('pill-shift-all');
+      if (pMorning) pMorning.classList.toggle('active', mode === 'morning');
+      if (pEvening) pEvening.classList.toggle('active', mode === 'evening');
+      if (pAll) pAll.classList.toggle('active', mode === 'all');
+
+      const s1 = document.getElementById('daily-hygiene-fields');
+      const s2 = document.getElementById('daily-prep-fields');
+      const s3 = document.getElementById('daily-trading-fields');
+      const s4 = document.getElementById('daily-closing-fields');
+      const mBar = document.getElementById('morning-quick-bar');
+      const eBar = document.getElementById('evening-quick-bar');
+      const nextBtn = document.getElementById('morning-next-btn-box');
+
+      if (mode === 'morning') {
+        if (s1) s1.style.display = 'block';
+        if (s2) s2.style.display = 'block';
+        if (s3) s3.style.display = 'block';
+        if (s4) s4.style.display = 'none';
+        if (mBar) mBar.style.display = 'flex';
+        if (eBar) eBar.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'block';
+      } else if (mode === 'evening') {
+        if (s1) s1.style.display = 'none';
+        if (s2) s2.style.display = 'none';
+        if (s3) s3.style.display = 'none';
+        if (s4) s4.style.display = 'block';
+        if (mBar) mBar.style.display = 'none';
+        if (eBar) eBar.style.display = 'flex';
+        if (nextBtn) nextBtn.style.display = 'none';
+      } else {
+        if (s1) s1.style.display = 'block';
+        if (s2) s2.style.display = 'block';
+        if (s3) s3.style.display = 'block';
+        if (s4) s4.style.display = 'block';
+        if (mBar) mBar.style.display = 'flex';
+        if (eBar) eBar.style.display = 'flex';
+        if (nextBtn) nextBtn.style.display = 'none';
+      }
+    }
+
+    function quickFillOpeningCheck() {
+      toggleAllCheckboxesInContainer('daily-hygiene-fields', true);
+      toggleAllCheckboxesInContainer('daily-prep-fields', true);
+      toggleAllCheckboxesInContainer('daily-trading-fields', true);
+      const amb = document.getElementById('daily-ambient-temp');
+      if (amb && !amb.value) amb.value = '20.0';
+      const fr = document.getElementById('daily-fridge-temp');
+      if (fr && !fr.value) fr.value = '3.6';
+      const rh = document.getElementById('daily-reheat-temp');
+      if (rh && !rh.value) rh.value = '78.5';
+      showToast('☀️ Morning opening checks & standard temperatures pre-filled.');
+    }
+
+    function quickFillClosingCheck() {
+      toggleAllCheckboxesInContainer('daily-closing-fields', true);
+      const cfr = document.getElementById('daily-closing-fridge');
+      if (cfr && !cfr.value) cfr.value = '3.7';
+      const prob = document.getElementById('daily-problems');
+      if (prob && !prob.value) prob.value = 'None';
+      const corr = document.getElementById('daily-corrective');
+      if (corr && !corr.value) corr.value = 'N/A';
+      const notes = document.getElementById('daily-notes');
+      if (notes && !notes.value) notes.value = 'Closing two-stage Jantex clean complete, Gozney Arc off & LPG in shed, Wales commercial recycling segregated.';
+      showToast('🌙 Evening closing checks pre-filled. Ready to sign!');
+    }
+
     function quickFillStandardDailyPass() {
-      toggleAllCheckboxesInContainer('sub-daily', true);
-      document.getElementById('daily-ambient-temp').value = '20.0';
-      document.getElementById('daily-fridge-temp').value = '3.6';
-      document.getElementById('daily-reheat-temp').value = '78.5';
-      document.getElementById('daily-closing-fridge').value = '3.7';
-      document.getElementById('daily-problems').value = 'None';
-      document.getElementById('daily-corrective').value = 'N/A';
-      document.getElementById('daily-notes').value = '48h fitness, domestic separation, two-stage Jantex clean, 24h dough, soapy water LPG, acrylamide, and 3-day stock labels verified.';
-      showToast('All boxes ticked & standard temperatures filled — verify with your probe before signing.');
+      quickFillOpeningCheck();
+      quickFillClosingCheck();
+      showToast('⚡ All day checks & standard compliant temperatures pre-filled.');
     }
 
     function clearRecordFilters() {
@@ -4842,6 +4978,7 @@ service cloud.firestore {
 
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('daily-date').value = getUKDateISO();
+      switchShiftView('morning');
       setExportDatePreset(3);
       updateClockBadge();
 
