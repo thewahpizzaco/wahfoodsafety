@@ -1016,13 +1016,12 @@
         </div>
         <div class="card-body">
           
-          <label class="form-label">Step A: Mark Day As (Prep, Trading, Both, or Closed)</label>
-          <input type="hidden" id="daily-day-type" value="Both">
+          <label class="form-label">Select Today's Operation:</label>
+          <input type="hidden" id="daily-day-type" value="Prep">
           <div class="day-type-pills">
-            <button type="button" class="day-pill active" data-day="Both" onclick="selectDayTypePill('Both')">🍕 Both (Prep & Trading)</button>
-            <button type="button" class="day-pill" data-day="Prep" onclick="selectDayTypePill('Prep')">🥣 Prep Day Only</button>
+            <button type="button" class="day-pill active" data-day="Prep" onclick="selectDayTypePill('Prep')">🥣 Prep Day Only</button>
             <button type="button" class="day-pill" data-day="Trading" onclick="selectDayTypePill('Trading')">🔥 Trading Day Only</button>
-            <button type="button" class="day-pill" data-day="Closed" onclick="selectDayTypePill('Closed')">🚪 Closed / Not Trading</button>
+            <button type="button" class="day-pill" data-day="Both" onclick="selectDayTypePill('Both')">🍕 Both (Prep & Trading)</button>
           </div>
 
           <div class="form-grid" style="max-width:320px; margin-bottom:1rem;">
@@ -3474,14 +3473,10 @@ service cloud.firestore {
       document.querySelectorAll('.day-pill').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-day') === dayVal);
       });
-      const hyg = document.getElementById('daily-hygiene-fields');
       const prep = document.getElementById('daily-prep-fields');
       const trade = document.getElementById('daily-trading-fields');
-      const closeBox = document.getElementById('daily-closing-fields');
-      hyg.style.display = (dayVal === 'Closed') ? 'none' : 'block';
-      prep.style.display = (dayVal === 'Both' || dayVal === 'Prep') ? 'block' : 'none';
-      trade.style.display = (dayVal === 'Both' || dayVal === 'Trading') ? 'block' : 'none';
-      closeBox.style.display = (dayVal === 'Closed') ? 'none' : 'block';
+      if (prep) prep.style.display = (dayVal === 'Both' || dayVal === 'Prep') ? 'block' : 'none';
+      if (trade) trade.style.display = (dayVal === 'Both' || dayVal === 'Trading') ? 'block' : 'none';
     }
 
     function updateProbeExpectedRange() {
@@ -5334,6 +5329,7 @@ service cloud.firestore {
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('daily-date').value = getUKDateISO();
       switchShiftView('morning');
+      selectDayTypePill('Prep');
       setExportDatePreset(3);
       updateClockBadge();
 
