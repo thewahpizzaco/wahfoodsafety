@@ -1764,10 +1764,22 @@
       <!-- COMPLIANCE DOCUMENT VAULT -->
       <div class="card">
         <div class="card-header">
-          <h3>Compliance Document Vault</h3>
-          <div style="display:flex; gap:8px; align-items:center;">
+          <div>
+            <h3>Compliance Document Vault</h3>
+            <div style="font-size:0.8rem; color:var(--argon-muted);">Essential food safety, gas safety, insurance, and risk assessment records for Cardiff SRS inspection.</div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="doc-filter-category" class="form-control" style="width:180px; font-size:0.8rem;" onchange="renderDocumentsAndGallery()" aria-label="Filter documents by category">
+              <option value="ALL">All Categories</option>
+              <option value="Food Safety Procedures & HACCP">HACCP & Procedures</option>
+              <option value="LPG / Gas Safety">Gas & LPG Safety</option>
+              <option value="Insurance">Insurance</option>
+              <option value="Certificates & Training">Certificates & Training</option>
+              <option value="Risk Assessments">Risk Assessments</option>
+              <option value="Chemicals / COSHH">Chemicals & COSHH</option>
+            </select>
             <label style="font-size:0.8rem; cursor:pointer;" class="owner-only">
-              <input type="checkbox" id="show-archived-docs" onchange="renderDocumentsAndGallery()"> Show Archived Documents
+              <input type="checkbox" id="show-archived-docs" onchange="renderDocumentsAndGallery()"> Show Archived
             </label>
           </div>
         </div>
@@ -2625,6 +2637,42 @@
             fileName: 'LPG_Hose_Inspection_And_Expiry_Log.txt',
             archived: false,
             fileDataUrl: 'data:text/plain;base64,' + utf8ToBase64('THE WAH PIZZA CO. — ANNUAL LPG HOSE & REGULATOR RECORD:\n\n1. Equipment: Gozney Arc Outdoor LPG Pizza Oven.\n2. Fuel: Propane (Red Cylinder) with 37mbar fixed low-pressure regulator.\n3. Hose Specification: BS 3212 Class 2 / BS EN 16436-1 Class 2 reinforced orange LPG hose.\n4. Visual Inspection Standard: Full length checked for cracking, stiffness, blistering, or perishing. Jubilee clips checked firm.\n5. Leak Testing Standard: Soapy water bubble test performed on all connections prior to lighting.\n6. 5-Year Replacement Cycle: Per UKLPG Code of Practice 24 and HSE rules, flexible rubber gas hoses must be replaced at a maximum of 5 years from manufacture date printed on hose.\n7. Current Inspection Date: October 2026 (Condition verified intact, flexible, zero cracks).\n8. Next Mandatory Replacement Due: October 2029 (or immediately if surface wear appears).')
+          },
+          {
+            id: 'DOC-06',
+            title: 'Cardiff Council (SRS) Food Business Registration Confirmation',
+            category: 'Food Safety Procedures & HACCP',
+            expiry: 'Registered — Shared Regulatory Services',
+            fileName: 'Cardiff_SRS_Food_Business_Registration.txt',
+            archived: false,
+            fileDataUrl: 'data:text/plain;base64,' + utf8ToBase64('THE WAH PIZZA CO. — LOCAL AUTHORITY REGISTRATION:\n\n1. Enforcing Authority: Shared Regulatory Services (Cardiff Council, Vale of Glamorgan & Bridgend).\n2. Legal Basis: Regulation (EC) No 852/2004 on the Hygiene of Foodstuffs.\n3. Operator: David Beeston, The Wah Pizza Co.\n4. Operation: Home-based takeaway & collection pizza pop-up, Cardiff.\n5. Status: Submitted & registered prior to trading launch.\n6. Primary Hygiene Office: Cardiff City Hall, Cathays Park, Cardiff CF10 3ND.')
+          },
+          {
+            id: 'DOC-07',
+            title: 'Home Kitchen & Outdoor Gozney Arc Fire Safety Risk Assessment',
+            category: 'Risk Assessments',
+            expiry: 'Active — Annual Review Oct 2027',
+            fileName: 'Fire_Safety_And_LPG_Risk_Assessment.txt',
+            archived: false,
+            fileDataUrl: 'data:text/plain;base64,' + utf8ToBase64('THE WAH PIZZA CO. — FIRE SAFETY & LPG RISK ASSESSMENT:\n\n1. Premises: Ground floor domestic kitchen & outdoor Gozney Arc cooking station.\n2. Ignition Sources: Gozney Arc LPG burner, domestic oven.\n3. Fuel Storage: Propane gas cylinders stored upright in locked outdoor garden shed with high & low ventilation; zero indoor LPG storage.\n4. Separation: 1-metre clear non-combustible perimeter around Gozney Arc oven.\n5. Emergency Equipment:\n   - Fire Blanket (BS EN 1869) mounted adjacent to kitchen exit route.\n   - Dry Powder / Foam Extinguisher (BS EN 3) positioned near service exit.\n6. Shutoff Protocol: Gas cylinder valve closed immediately after baking; soapy water leak check before every lighting.\n7. Escape Route: Unobstructed ground-floor exit.')
+          },
+          {
+            id: 'DOC-08',
+            title: 'COSHH Safety Assessment: Jantex Sanitiser & Hand Soap',
+            category: 'Chemicals / COSHH',
+            expiry: 'Active — BS EN 1276 Standards Verified',
+            fileName: 'COSHH_Assessment_Jantex_Chemicals.txt',
+            archived: false,
+            fileDataUrl: 'data:text/plain;base64,' + utf8ToBase64('THE WAH PIZZA CO. — COSHH RISK ASSESSMENT & CHEMICAL REGISTER:\n\n1. Primary Sanitiser: Jantex Multi-Surface Cleaner & Sanitiser.\n   - European Standard: Certified BS EN 1276 & BS EN 13697 bactericidal.\n   - Contact Time & Dilution: Per bottle manufacturer instructions (30s contact time).\n   - Surface Compatibility: Food prep counters, dough trays, stainless steel tables, utensils.\n   - Storage: Stored in low-level closed cupboard strictly away from and below food/flour storage.\n\n2. Hand Hygiene: Jantex Antibacterial Hand Soap.\n   - Location: Dedicated second kitchen handwash sink.\n   - Drying Method: Disposable blue roll only (no shared domestic tea towels).\n\n3. Accidental Ingestion / Eye Contact: Flush with copious clean water; safety data sheet available from supplier (Nisbets).')
+          },
+          {
+            id: 'DOC-09',
+            title: 'Wales Commercial Waste Duty of Care & Recycling Compliance (2024)',
+            category: 'Risk Assessments',
+            expiry: 'Active — Compliant with Wales Workplace Regs',
+            fileName: 'Wales_Workplace_Recycling_Duty_Of_Care.txt',
+            archived: false,
+            fileDataUrl: 'data:text/plain;base64,' + utf8ToBase64('THE WAH PIZZA CO. — WALES WORKPLACE RECYCLING COMPLIANCE:\n\n1. Legal Mandate: The Workplace Recycling Regulations (Wales) 2024 (effective April 6, 2024).\n2. Commercial Waste Duty of Care: All business waste must be separated at source and kept strictly segregated from domestic household refuse.\n3. Mandatory Waste Streams:\n   - Stream 1: Commercial Food Waste (dough scraps, cheese residues, scrapings) into dedicated food caddy.\n   - Stream 2: Clean Paper & Cardboard (supplier delivery boxes, clean packaging).\n   - Stream 3: Glass (tomato paste jars, olive oil bottles).\n   - Stream 4: Metal, Foil & Plastics (tin cans, film wrap).\n4. FOG Control: Zero fats, oils, or food solids discharged into kitchen drainage.')
           }
         ],
         gallery: [
@@ -4335,23 +4383,46 @@
      ********************************************************************/
     function renderDocumentsAndGallery() {
       const showArchived = document.getElementById('show-archived-docs')?.checked || false;
-      const visibleDocs = appState.documents.filter(d => showArchived ? true : !d.archived);
+      const catFilter = document.getElementById('doc-filter-category')?.value || 'ALL';
+      const visibleDocs = appState.documents.filter(d => {
+        if (!showArchived && d.archived) return false;
+        if (catFilter !== 'ALL' && d.category !== catFilter) return false;
+        return true;
+      });
+
+      const getCategoryBadge = (cat) => {
+        if (cat.includes('Gas') || cat.includes('LPG')) return '<span class="badge badge-danger">🔥 ' + escapeHtml(cat) + '</span>';
+        if (cat.includes('Certificate')) return '<span class="badge badge-success">🎓 ' + escapeHtml(cat) + '</span>';
+        if (cat.includes('Insurance')) return '<span class="badge badge-info">🛡️ ' + escapeHtml(cat) + '</span>';
+        if (cat.includes('Risk')) return '<span class="badge badge-warning">⚖️ ' + escapeHtml(cat) + '</span>';
+        if (cat.includes('Chemical') || cat.includes('COSHH')) return '<span class="badge badge-default">🧴 ' + escapeHtml(cat) + '</span>';
+        return '<span class="badge badge-primary">📋 ' + escapeHtml(cat) + '</span>';
+      };
+
+      const getExpiryBadge = (exp) => {
+        if (exp.toUpperCase().includes('TO CONFIRM') || exp.toUpperCase().includes('IN PROCESS')) {
+          return `<span class="badge badge-warning">⏳ ${escapeHtml(exp)}</span>`;
+        }
+        return `<span class="badge badge-success">✓ ${escapeHtml(exp)}</span>`;
+      };
 
       const tbody = document.getElementById('docs-table-body');
-      tbody.innerHTML = visibleDocs.map(d => `
+      tbody.innerHTML = visibleDocs.length === 0
+        ? `<tr><td colspan="5" style="text-align:center; color:var(--argon-muted); padding:1.5rem;">No documents match the selected category filter.</td></tr>`
+        : visibleDocs.map(d => `
         <tr style="${d.archived ? 'opacity:0.6; background:#f4f5f7;' : ''}">
           <td>
             <strong>${escapeHtml(d.title)}</strong>
-            ${d.archived ? '<span class="badge badge-warning">Archived</span>' : ''}
+            ${d.archived ? '<span class="badge badge-warning" style="margin-left:6px;">Archived</span>' : ''}
           </td>
-          <td><span class="badge badge-info">${escapeHtml(d.category)}</span></td>
-          <td>${d.expiry.includes('TO CONFIRM') ? `<span class="badge badge-warning">${escapeHtml(d.expiry)}</span>` : escapeHtml(d.expiry)}</td>
-          <td style="font-size:0.8rem;">${escapeHtml(d.fileName || 'Record.txt')}</td>
+          <td>${getCategoryBadge(d.category)}</td>
+          <td>${getExpiryBadge(d.expiry)}</td>
+          <td style="font-size:0.8rem; color:var(--argon-muted);">${escapeHtml(d.fileName || 'Record.txt')}</td>
           <td style="display:flex; gap:4px; flex-wrap:wrap;">
-            <button class="btn btn-sm btn-info" onclick="viewDocumentModal('${escapeHtml(d.id)}')">View</button>
-            <a class="btn btn-sm btn-secondary" href="${escapeHtml(d.fileDataUrl)}" download="${escapeHtml(d.fileName || 'document.txt')}">Download</a>
-            <button class="btn btn-sm btn-secondary owner-only" onclick="renameOrReplaceDocModal('${escapeHtml(d.id)}')">Rename / Replace</button>
-            <button class="btn btn-sm btn-warning owner-only" onclick="toggleArchiveDoc('${escapeHtml(d.id)}')">${d.archived ? 'Unarchive' : 'Archive'}</button>
+            <button class="btn btn-sm btn-info" onclick="viewDocumentModal('${escapeHtml(d.id)}')">👁️ View</button>
+            <a class="btn btn-sm btn-secondary" href="${escapeHtml(d.fileDataUrl)}" download="${escapeHtml(d.fileName || 'document.txt')}">⬇️ Download</a>
+            <button class="btn btn-sm btn-secondary owner-only" onclick="renameOrReplaceDocModal('${escapeHtml(d.id)}')">Edit</button>
+            <button class="btn btn-sm btn-warning owner-only" onclick="toggleArchiveDoc('${escapeHtml(d.id)}')">${d.archived ? 'Restore' : 'Archive'}</button>
             <button class="btn btn-sm btn-danger owner-only" onclick="confirmDeleteDocModal('${escapeHtml(d.id)}')">Delete</button>
           </td>
         </tr>
@@ -4376,18 +4447,23 @@
       let previewContent = '';
       if ((d.fileDataUrl || '').startsWith('data:text/plain;base64,')) {
         const decoded = base64ToUtf8(d.fileDataUrl.split(',')[1] || '');
-        previewContent = `<pre style="background:#f6f9fc; padding:1rem; border-radius:6px; white-space:pre-wrap; font-size:0.85rem;">${decoded}</pre>`;
+        previewContent = `<pre style="background:#f6f9fc; padding:1rem; border-radius:6px; white-space:pre-wrap; font-size:0.85rem; font-family:monospace; line-height:1.5; max-height:60vh; overflow-y:auto;">${escapeHtml(decoded)}</pre>`;
       } else if ((d.fileDataUrl || '').startsWith('data:image/')) {
-        previewContent = `<img src="${d.fileDataUrl}" alt="${d.title}" style="max-width:100%; border-radius:6px;">`;
+        previewContent = `<div style="text-align:center;"><img src="${d.fileDataUrl}" alt="${escapeHtml(d.title)}" style="max-width:100%; max-height:65vh; border-radius:6px; box-shadow:0 3px 6px rgba(0,0,0,0.1);"></div>`;
+      } else if ((d.fileDataUrl || '').startsWith('data:application/pdf;base64,')) {
+        previewContent = `<iframe src="${d.fileDataUrl}" style="width:100%; height:65vh; border:1px solid #cbd5e1; border-radius:6px;"></iframe>`;
       } else {
-        previewContent = `<p>Binary document attached (<strong>${d.fileName}</strong>). Use the Download button below to view in your native reader.</p>`;
+        previewContent = `<p>Binary document attached (<strong>${escapeHtml(d.fileName)}</strong>). Use the Download button below to view in your native reader.</p>`;
       }
 
       openModal(
-        `Protected Document Viewer: ${d.title}`,
-        `<p style="font-size:0.82rem; color:var(--argon-muted);">Category: <strong>${d.category}</strong> | Status/Expiry: <strong>${d.expiry}</strong></p>
+        `Document Viewer: ${escapeHtml(d.title)}`,
+        `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:0.82rem; color:var(--argon-muted); flex-wrap:wrap; gap:6px;">
+           <span>Category: <strong>${escapeHtml(d.category)}</strong></span>
+           <span>Status: <strong>${escapeHtml(d.expiry)}</strong></span>
+         </div>
          ${previewContent}`,
-        `<a class="btn btn-primary" href="${d.fileDataUrl}" download="${d.fileName}">Download Copy</a>
+        `<a class="btn btn-primary" href="${escapeHtml(d.fileDataUrl)}" download="${escapeHtml(d.fileName)}">⬇️ Download Copy</a>
          <button class="btn btn-secondary" onclick="closeModal()">Close</button>`
       );
     }
