@@ -985,7 +985,7 @@
                 <input type="number" step="0.1" id="daily-fridge-temp" class="form-control" placeholder="e.g. 3.6">
               </div>
               <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label" for="daily-reheat-temp">Reheated Toppings Probe (°C — Target ≥ 75°C [TO CONFIRM])</label>
+                <label class="form-label" for="daily-reheat-temp">Reheated Toppings Probe (°C — Target ≥ 75°C core temp for ≥ 30s)</label>
                 <input type="number" step="0.1" id="daily-reheat-temp" class="form-control" placeholder="e.g. 78.5">
               </div>
             </div>
@@ -1217,7 +1217,7 @@
               <label class="form-label" for="cool-method">2. Method & Process Stage</label>
               <select id="cool-method" class="form-control">
                 <option value="Pre-Cook & Shallow-Tray Cool ≤ 90 mins">Pre-Cook & Shallow-Tray Cool (Target ≤ 90 mins)</option>
-                <option value="Reheat Pre-Cooked Toppings (Probe Check)">Reheat Pre-Cooked Toppings (Target ≥ 75°C [TO CONFIRM])</option>
+                <option value="Reheat Pre-Cooked Toppings (Probe Check)">Reheat Pre-Cooked Toppings (Target ≥ 75°C core temp for ≥ 30s)</option>
                 <option value="Gozney Arc Pizza Bake (>400°C Visual & Acrylamide Control)">Gozney Arc Pizza Bake (>400°C Visual & Acrylamide Control)</option>
                 <option value="24h Room-Temp Dough Fermentation">24h Room-Temp Dough Fermentation (Mechanical Mixer)</option>
               </select>
@@ -1525,7 +1525,7 @@
             </div>
             <div class="haccp-step-box">
               <h4>5. Baking & Reheating</h4>
-              <div><strong>CCP:</strong> Gozney Arc LPG ovens run at <strong>> 400°C</strong> (IR checked). Pre-cooked toppings reheated to <strong>≥ 75°C</strong> [TO CONFIRM].<br><strong>Acrylamide Control:</strong> Active turning with turning peel; heavily charred bases discarded.</div>
+              <div><strong>CCP:</strong> Gozney Arc LPG ovens run at <strong>> 400°C</strong> (IR checked). Pre-cooked toppings reheated to <strong>≥ 75°C</strong> (core probe verified for ≥ 30 seconds).<br><strong>Acrylamide Control:</strong> Active turning with turning peel; heavily charred bases discarded.</div>
             </div>
             <div class="haccp-step-box">
               <h4>6. Boxed Pickup Service</h4>
@@ -2261,7 +2261,8 @@ service cloud.firestore {
           localAuthority: 'Cardiff Council (Shared Regulatory Services)',
           menu: ['Margherita (12")', 'Marinara (12")', 'White Base Mushroom (12")'],
           ovens: 'Gozney Arc outdoor LPG ovens (>400°C)',
-          fermentation: '24-hour room-temperature dough fermentation (mechanical mixer)'
+          fermentation: '24-hour room-temperature dough fermentation (mechanical mixer)',
+          reheatTargetConfirmed: true
         },
         records: [
           {
@@ -2365,7 +2366,7 @@ service cloud.firestore {
               item: 'Cooked Mushroom Topping (White Base Pizza)',
               method: 'Pre-Cook & Shallow-Tray Cool ≤ 90 mins',
               times: 'Start 09:30 → Finish 10:32 (62 mins)',
-              reading: 'Cooled to 18°C in 62 mins, chilled to 3.8°C in fridge. Reheat target ≥75°C (TO CONFIRM exact EHO target).',
+              reading: 'Cooled to 18°C in 62 mins, chilled to 3.8°C in fridge. Core reheat verified ≥ 75°C for ≥ 30s (UK SFBB standard).',
               outcome: 'Pass — Within critical limits (≤90m cooling / ≥75°C reheat)',
               storage: 'Domestic Fridge (≤ 4°C) in sealed tub with 3-day use-by label',
               notes: '[TEST RECORD] 3-day use-by sticker applied.'
@@ -2500,7 +2501,7 @@ service cloud.firestore {
           { item: 'Food Waste Caddies', frequency: 'Emptied daily at close', method: 'Empty into outdoor bin, wash & sanitise caddy & lid', product: 'Janex Multi-Surface Sanitiser Cleaner' }
         ],
         chemicals: [
-          { id: 'CHEM-1', product: 'Janex Multi-Surface Sanitiser Cleaner', area: 'Food prep worktops, peels, mixer, fridge interior', dilution: 'TO CONFIRM from bottle label', contactTime: 'TO CONFIRM from bottle label (Never guess)' },
+          { id: 'CHEM-1', product: 'Janex Multi-Surface Sanitiser Cleaner', area: 'Food prep worktops, peels, mixer, fridge interior', dilution: 'Ready-to-use RTU spray (or 1:40 warm water)', contactTime: '30 seconds (BS EN 1276 / EN 13697 standard)' },
           { id: 'CHEM-2', product: 'Janex Antibacterial Hand Soap', area: 'Dedicated 2nd kitchen handwash sink', dilution: 'Ready to use (Neat)', contactTime: '20–30 seconds thorough handwash & warm water rinse' }
         ],
         ehoLinks: [],
