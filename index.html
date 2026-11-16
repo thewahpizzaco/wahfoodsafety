@@ -2685,12 +2685,21 @@ service cloud.firestore {
         .catch((error) => {
           console.error("Google Sign-In Error:", error);
           let userMsg = error.message;
-          if (error.code === 'auth/operation-not-allowed') {
+          if (error.code === 'auth/popup-blocked') {
+            // Automatically fall back to full-page redirect so popup blockers never stop the user!
+            showToast('Popup blocked. Redirecting directly to Google Sign-In...');
+            auth.signInWithRedirect(provider).catch((redirectErr) => {
+              if (errBox) {
+                errBox.style.display = 'block';
+                errBox.innerHTML = '<strong>Redirect Error:</strong> ' + redirectErr.message;
+              }
+              showToast('Redirect Error: ' + redirectErr.message, true);
+            });
+            return;
+          } else if (error.code === 'auth/operation-not-allowed') {
             userMsg = '<strong>Google Sign-In is not enabled yet in your Firebase Console.</strong><br>Please open your <a href="https://console.firebase.google.com/project/wahpizzafoodsafety/authentication/providers" target="_blank" style="color:var(--argon-primary); text-decoration:underline;">Firebase Console → Sign-in method</a>, click Google, and switch it to <strong>Enable</strong>.';
           } else if (error.code === 'auth/unauthorized-domain') {
             userMsg = '<strong>Domain not authorized:</strong> Please add this domain (' + window.location.hostname + ') to your <a href="https://console.firebase.google.com/project/wahpizzafoodsafety/authentication/settings" target="_blank" style="color:var(--argon-primary); text-decoration:underline;">Firebase Auth Authorized Domains</a>.';
-          } else if (error.code === 'auth/popup-blocked') {
-            userMsg = '<strong>Popup blocked by browser:</strong> Please check your browser address bar and allow popups for ' + window.location.origin + '.';
           } else if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
             userMsg = 'Google Sign-In window was closed before completing.';
           }
@@ -2895,6 +2904,21 @@ service cloud.firestore {
 
         firestoreDb = firebase.firestore();
         const fbAuth = firebase.auth();
+
+        // Handle return from full-page Google Sign-In redirect
+        fbAuth.getRedirectResult().then((result) => {
+          if (result && result.user) {
+            handleAuthenticatedUser(result.user);
+          }
+        }).catch((redirectErr) => {
+          console.error("Google Redirect Error:", redirectErr);
+          const errBox = document.getElementById('auth-modal-error-box');
+          if (errBox) {
+            errBox.style.display = 'block';
+            errBox.innerHTML = '<strong>Sign-In Error:</strong> ' + redirectErr.message;
+          }
+          showToast('Sign-In Error: ' + redirectErr.message, true);
+        });
 
         window.firebaseAuthSignIn = (email, password) => fbAuth.signInWithEmailAndPassword(email, password);
 
