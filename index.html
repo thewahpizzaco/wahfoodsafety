@@ -2020,110 +2020,113 @@
       </div>
     </section>
 
-    <!-- ==========================================
-         6. SYSTEM: EXPORT, SEND PACK, EHO LINK, CLOUD & BACKUP
+        <!-- ==========================================
+         6. SYSTEM: EXPORTS, INSPECTION PACK, EHO LINKS & BACKUP
          ========================================== -->
-    <section id="tab-system" class="tab-pane owner-only" aria-label="System Exports, EHO Links and Backups">
+    <section id="tab-system" class="tab-pane owner-only" aria-label="System Tools, Exports and Backup">
       <div class="section-banner">
         <div>
-          <h2>⚙️ System Tools, EHO Links & Complete Backup</h2>
-          <p>Generate inspection PDFs/CSVs, manage secure EHO read-only links, sync cloud data, and download offline backups.</p>
+          <h2>⚙️ System Tools & Inspection Management</h2>
+          <p>Export food safety reports, generate secure Cardiff EHO links, bundle compliance documents, and download complete offline backups.</p>
         </div>
       </div>
 
-      <!-- SECTION A: RECORDS-ONLY EXPORT (PDF & CSV) -->
+      <!-- 1. RECORDS EXPORT (PDF & CSV) -->
       <div class="card">
         <div class="card-header">
-          <h3>1. Records-Only Export (Readable PDF & Structured CSV)</h3>
-          <span class="badge badge-primary">Excludes Supporting Documents</span>
+          <h3>1. Records Export (PDF & CSV)</h3>
+          <span class="badge badge-primary">Audit Reports</span>
         </div>
         <div class="card-body">
-          <p style="margin-top:0; font-size:0.85rem;">
-            Exports full saved record details: exact temperature readings, LPG soapy water checks, cooling times, probe verification readings, corrective actions, amendments, signer, and UK timestamps. Supporting documents are strictly excluded from this report.
+          <p style="margin-top:0; font-size:0.85rem; color:var(--argon-text);">
+            Download your signed temperature logs, daily checks, and review history for Cardiff Council EHO inspections, insurance, or offline bookkeeping.
           </p>
           <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:1rem;">
-            <button class="btn btn-sm btn-secondary" onclick="setExportDatePreset(3)">Last 3 Months</button>
-            <button class="btn btn-sm btn-secondary" onclick="setExportDatePreset(6)">Last 6 Months</button>
-            <button class="btn btn-sm btn-secondary" onclick="setExportDatePreset(12)">Last 12 Months</button>
-            <button class="btn btn-sm btn-secondary" onclick="setExportDatePreset(0)">All Dates</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="setExportDatePreset(3)">Last 3 Months</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="setExportDatePreset(6)">Last 6 Months</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="setExportDatePreset(12)">Last 12 Months</button>
+            <button type="button" class="btn btn-sm btn-secondary" onclick="setExportDatePreset(0)">All Time</button>
           </div>
-          <div class="form-grid" style="max-width:600px;">
-            <div class="form-group">
+          <div class="form-grid" style="max-width:500px; margin-bottom:1rem;">
+            <div class="form-group" style="margin-bottom:0;">
               <label class="form-label" for="exp-from">From Date</label>
               <input type="date" id="exp-from" class="form-control">
             </div>
-            <div class="form-group">
+            <div class="form-group" style="margin-bottom:0;">
               <label class="form-label" for="exp-to">To Date</label>
               <input type="date" id="exp-to" class="form-control">
             </div>
           </div>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="exportRecordsPDF()">📄 Download Detailed Records-Only PDF</button>
-            <button class="btn btn-info" onclick="exportRecordsCSV()">📊 Download Structured Records CSV</button>
+            <button type="button" class="btn btn-primary" onclick="exportRecordsPDF()">📄 Download PDF Report</button>
+            <button type="button" class="btn btn-info" onclick="exportRecordsCSV()">📊 Download CSV / Excel</button>
           </div>
         </div>
       </div>
 
-      <!-- SECTION B: SEND DOCUMENTS PACK -->
+      <!-- 2. INSPECTOR DOCUMENT PACK -->
       <div class="card">
         <div class="card-header">
-          <h3>2. Send Documents & Optional Records Report Pack</h3>
-          <span class="badge badge-info">Previewable Pack • Phone Share Sheet / Email Composer • Never Sends Automatically</span>
+          <h3>2. Inspector Document Pack (Documents & Certificates)</h3>
+          <span class="badge badge-info">PDF & ZIP Pack</span>
         </div>
         <div class="card-body">
+          <p style="margin-top:0; font-size:0.85rem; color:var(--argon-text);">
+            Bundle your compliance certificates (Gas Safety, Insurance, Safe Methods, Allergen Matrix) and optional signed logs into a single tidy ZIP package for the EHO.
+          </p>
           <div class="form-grid">
             <div>
-              <label class="form-label">Select Documents to Include in Pack</label>
+              <label class="form-label">Select Documents to Include:</label>
               <div id="pack-doc-checkboxes" style="background:#f6f9fc; padding:0.75rem; border-radius:var(--argon-radius); border:1px solid var(--argon-border); max-height:180px; overflow-y:auto;"></div>
             </div>
             <div>
-              <label class="form-label">Optional Date-Range Records Report</label>
-              <label style="display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:0.88rem; cursor:pointer;">
+              <label class="form-label">Optional Records Inclusion:</label>
+              <label style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:0.85rem; cursor:pointer;">
                 <input type="checkbox" id="pack-include-records" checked>
-                Include Detailed Records Report (uses date range above)
+                Include Date-Range Records Report (uses dates selected above)
               </label>
-              <label class="form-label" for="pack-recipient-email">Recipient Email (Optional for Email Composer)</label>
-              <input type="email" id="pack-recipient-email" class="form-control" placeholder="e.g. eho@cardiff.gov.uk">
+              <label class="form-label" for="pack-recipient-email">Recipient Email (Optional draft):</label>
+              <input type="email" id="pack-recipient-email" class="form-control" placeholder="e.g. foodhygiene@cardiff.gov.uk">
             </div>
           </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
-            <button class="btn btn-default" onclick="previewDocumentPack()">👁️ Preview Pack Contents</button>
-            <button class="btn btn-primary" onclick="downloadDocumentPackZip()">📦 Download Pack (.ZIP)</button>
-            <button class="btn btn-success" onclick="shareDocumentPackMobile()">📲 Open Phone Share Sheet</button>
-            <button class="btn btn-secondary" onclick="openEmailComposerForPack()">✉️ Open Email Composer (Draft Only)</button>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:1rem;">
+            <button type="button" class="btn btn-primary" onclick="downloadDocumentPackZip()">📦 Download Document Pack (.ZIP)</button>
+            <button type="button" class="btn btn-secondary" onclick="previewDocumentPack()">👁️ Preview Contents</button>
+            <button type="button" class="btn btn-secondary" onclick="shareDocumentPackMobile()">📲 Phone Share</button>
+            <button type="button" class="btn btn-secondary" onclick="openEmailComposerForPack()">✉️ Open Email Draft</button>
           </div>
           <div id="pack-preview-area" style="display:none; margin-top:1rem; padding:1rem; background:#f8f9fe; border:1px solid var(--argon-border); border-radius:var(--argon-radius);"></div>
         </div>
       </div>
 
-      <!-- SECTION C: READ-ONLY EHO INSPECTION LINK MANAGER -->
+      <!-- 3. SHARE READ-ONLY LINK WITH CARDIFF EHO -->
       <div class="card">
         <div class="card-header">
-          <h3>3. Read-Only EHO Inspection Link & Access Audit Trail</h3>
-          <span class="badge badge-warning">Time-Limited • Revocable • URL Parameter Support (`?eho=TOKEN`)</span>
+          <h3>3. Share Read-Only Link with Cardiff EHO</h3>
+          <span class="badge badge-success">No Sign-In Required for Inspector</span>
         </div>
         <div class="card-body">
-          <p style="margin-top:0; font-size:0.85rem;">
-            Generates a time-limited, revocable inspection link (`?eho=TOKEN`) for Cardiff Council EHO. Exposes signed daily records, manager reviews, probe verifications, written Safe Methods, compliance documents, and captioned premises photos while stripping all editing controls and private contact details.
+          <p style="margin-top:0; font-size:0.85rem; color:var(--argon-text);">
+            Generate a secure, time-limited link that lets Cardiff Council EHO view your live diary, temperatures, and Safe Methods in clean read-only mode without needing an account.
           </p>
-          <div class="form-grid" style="max-width:700px;">
+          <div class="form-grid" style="max-width:700px; margin-bottom:1rem;">
             <div>
-              <label class="form-label" for="eho-link-label">Inspection Pass Label / EHO Reference</label>
+              <label class="form-label" for="eho-link-label">Link Reference / Note</label>
               <input type="text" id="eho-link-label" class="form-control" value="Cardiff Council EHO Inspection Pass">
             </div>
             <div>
-              <label class="form-label" for="eho-link-duration">Link Expiry Duration</label>
+              <label class="form-label" for="eho-link-duration">Expiry Duration</label>
               <select id="eho-link-duration" class="form-control">
                 <option value="24">24 Hours</option>
                 <option value="72">72 Hours (3 Days)</option>
-                <option value="168" selected>7 Days</option>
+                <option value="168" selected>7 Days (Recommended)</option>
                 <option value="720">30 Days</option>
               </select>
             </div>
           </div>
-          <button class="btn btn-primary" onclick="createEhoInspectionLink()">🔗 Create Time-Limited EHO Inspection Link</button>
+          <button type="button" class="btn btn-primary" onclick="createEhoInspectionLink()">🔗 Generate Inspector Link</button>
 
-          <h4 style="margin-top:1.5rem; margin-bottom:0.5rem; color:var(--argon-heading);">Active & Historical Inspection Links</h4>
+          <h4 style="margin-top:1.5rem; margin-bottom:0.5rem; color:var(--argon-heading); font-size:0.9rem;">Active Inspector Links</h4>
           <div class="table-responsive">
             <table class="argon-table">
               <thead>
@@ -2140,97 +2143,61 @@
             </table>
           </div>
 
-          <h4 style="margin-top:1.5rem; margin-bottom:0.5rem; color:var(--argon-heading);">Immutable EHO Link Audit Log (Created, Opened, Expired, Revoked)</h4>
-          <div id="eho-audit-log-box" style="background:#f6f9fc; border:1px solid var(--argon-border); border-radius:var(--argon-radius); padding:0.75rem; max-height:180px; overflow-y:auto; font-family:monospace; font-size:0.78rem;"></div>
+          <details style="margin-top:1rem; background:#f8f9fe; border:1px solid var(--argon-border); border-radius:var(--argon-radius); padding:0.6rem 0.85rem; font-size:0.8rem;">
+            <summary style="cursor:pointer; font-weight:600; color:var(--argon-primary);">▾ View Security & Link Access Audit Log</summary>
+            <div id="eho-audit-log-box" style="margin-top:0.5rem; max-height:160px; overflow-y:auto; font-family:monospace; font-size:0.75rem; background:#fff; padding:8px; border:1px solid #e2e8f0; border-radius:4px;"></div>
+          </details>
         </div>
       </div>
 
-      <!-- SECTION D: COMPLETE OWNER-ONLY BACKUP & TEST DATA CLEANUP -->
+      <!-- 4. BACKUP, RESTORE & PRE-LAUNCH CLEANUP -->
       <div class="card">
         <div class="card-header">
-          <h3>4. Owner-Only Complete Independent Backup (.ZIP) & Test Data Control</h3>
-          <span class="badge badge-success">JSON + CSV + Uploaded Files + Built-in Evidence + Manifest</span>
+          <h3>4. Backup, Restore & Pre-Launch Clean-up</h3>
+          <span class="badge badge-success">Offline Safe</span>
         </div>
         <div class="card-body">
-          <div style="background:#fff9f5; border-left:4px solid var(--argon-warning); padding:0.85rem 1rem; margin-bottom:1rem; font-size:0.85rem;">
-            <strong>Independent Evidence Notice:</strong> This complete backup archive contains your raw records and system configuration in both structured JSON and CSV formats, all original uploaded files, delivery receipt photos, optimised gallery photos, controlled built-in evidence (written Safe Methods, 14-allergen matrix, cleaning schedule, and Jantex chemical register), and an itemised `manifest.json`.
-            <strong>Security Guarantee:</strong> Passwords, session secrets, and access tokens are strictly excluded.
-            <em>Note: This backup is independent compliance evidence and may require technical work to restore to a different platform unless using the tested JSON Restore tool below.</em>
-          </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-            <button class="btn btn-default" onclick="downloadCompleteOwnerBackup()">💾 Download Complete Owner Backup (.ZIP)</button>
+          <p style="margin-top:0; font-size:0.85rem; color:var(--argon-text);">
+            Download a complete offline copy of your entire system (all records, uploaded documents, receipt photos, and settings) or wipe sample test data when you are ready to start trading.
+          </p>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:1.25rem;">
+            <button type="button" class="btn btn-primary" onclick="downloadCompleteOwnerBackup()">💾 Download Complete Backup (.ZIP)</button>
             <label class="btn btn-secondary" style="margin:0; cursor:pointer;">
-              🔄 Tested Restore from Backup JSON
+              🔄 Restore from Backup JSON
               <input type="file" accept=".json" style="display:none;" onchange="restoreFromBackupJson(event)">
             </label>
-            <button class="btn btn-warning" onclick="confirmRemoveSeededTestRecords()">🧹 Clear Seeded Test Records (Prepare for Live Trading)</button>
+          </div>
+
+          <div style="background:#fffaf0; border:1px solid #feebc8; border-left:4px solid var(--argon-warning); padding:0.85rem 1rem; border-radius:var(--argon-radius);">
+            <div style="font-weight:700; color:#9c4221; margin-bottom:4px;">🚀 Ready to Launch Your Pizzeria?</div>
+            <div style="font-size:0.8rem; color:#7b341e; margin-bottom:10px;">
+              Your app currently includes sample test records (Oct 2026) for demonstration. When you are ready to open for real trading, tap below to wipe only the sample records while preserving all your documents, safe methods, and settings.
+            </div>
+            <button type="button" class="btn btn-sm btn-warning" onclick="confirmRemoveSeededTestRecords()">🧹 Clear Sample Test Records</button>
           </div>
         </div>
       </div>
 
-      <!-- SECTION E: REAL FIREBASE CLOUD SYNC & SERVER-SIDE SECURITY RULES -->
+      <!-- 5. SECURITY & AUTHORIZED GOOGLE ACCOUNTS -->
       <div class="card">
         <div class="card-header">
-          <h3>5. Live Firebase Cloud Persistence & Server-Side Firestore Security Rules</h3>
-          <span class="badge badge-primary">Real Firestore SDK + Auth Integration</span>
+          <h3>5. Security & Authorized Google Accounts</h3>
+          <span class="badge badge-success">Google OAuth Protected</span>
         </div>
         <div class="card-body">
-          <!-- DIAGNOSTIC STATUS PANEL (NEW FOR GOOGLE SITES DEBUGGING) -->
-          <div id="cloud-diag-box" style="background:#172b4d; color:#fff; padding:1rem; border-radius:var(--argon-radius); margin-bottom:1rem; font-family:monospace; font-size:0.8rem; line-height:1.6;">
-            <div style="font-weight:700; color:var(--argon-info); margin-bottom:4px;">🔍 Live Persistence & Cloud Sync Diagnostics</div>
-            <div id="diag-storage-status">⏳ Checking local storage survival...</div>
-            <div id="diag-firebase-init">⏳ Checking Firebase initialization...</div>
-            <div id="diag-auth-status">⏳ Checking Authentication status...</div>
-            <div id="diag-firestore-status">⏳ Checking Firestore read/write connection...</div>
-            <div id="diag-last-sync" style="color:var(--argon-success); margin-top:4px;"></div>
-          </div>
-
-          <p style="margin-top:0; font-size:0.84rem;">
-            Paste your Firebase Web App Config JSON below to activate live **Firebase Auth + Cloud Firestore** persistence (`wah_haccp/production_state`) alongside local device storage.
-          </p>
-          <div class="form-grid">
-            <div>
-              <label class="form-label" for="firebase-config-input">Firebase Config JSON</label>
-              <textarea id="firebase-config-input" class="form-control" rows="4" placeholder='{"apiKey":"...","authDomain":"...","projectId":"..."}'></textarea>
-              <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
-                <button class="btn btn-sm btn-primary" onclick="saveFirebaseConfig()">Save Config</button>
-                <button class="btn btn-sm btn-info" onclick="promptFirebaseAuthDialog()">🔑 Sign In to Firebase Auth</button>
-              </div>
-            </div>
-            <div>
-              <label class="form-label">Server-Side `firestore.rules` (Copy to Firebase Console)</label>
-              <pre style="background:#172b4d; color:#f8f9fe; padding:10px; border-radius:6px; font-size:0.72rem; overflow-x:auto; margin:0;">rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /wah_haccp/{docId} {
-      // Allows read/write for your embedded app (supports auto-anonymous auth in iframes)
-      allow read, write: if request.auth != null;
-      // Allow Read-Only EHO token access when present in query
-      allow get: if resource.data.activeEhoTokens.hasAny([request.query.ehoToken]);
-    }
-  }
-}</pre>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SECTION F: SECURITY, GOOGLE AUTH & OWNER ACCESS -->
-      <div class="card">
-        <div class="card-header">
-          <h3>6. Security, Google Authentication & Approved Owner Accounts</h3>
-          <span class="badge badge-success">Google Auth Protected</span>
-        </div>
-        <div class="card-body">
-          <p style="margin-top:0; font-size:0.85rem;">
-            Only verified Google accounts on the approved list below can unlock Owner Mode to sign records, edit Safe Methods, and modify system settings. PIN access is completely disabled.
+          <p style="margin-top:0; font-size:0.85rem; color:var(--argon-text);">
+            Only signed-in Google accounts on the approved list below can unlock Owner Mode to sign records, edit Safe Methods, and modify settings. All public visitors and EHO links remain in secure read-only mode.
           </p>
           <div style="background:#f6f9fc; border:1px solid var(--argon-border); border-radius:var(--argon-radius); padding:1rem; max-width:620px;">
-            <label class="form-label">Approved Owner & Manager Google Accounts</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <label class="form-label" style="margin:0;">Authorized Google Accounts:</label>
+              <span class="badge badge-info" style="font-size:0.7rem;">☁️ Cloud Persistence Active</span>
+            </div>
             <div id="approved-emails-list" style="margin-bottom:10px;"></div>
             <div style="display:flex; gap:8px;">
-              <input type="email" id="new-approved-email" class="form-control" placeholder="Add authorized Google email...">
-              <button class="btn btn-sm btn-primary" onclick="addApprovedEmail()">+ Add Email</button>
+              <input type="email" id="new-approved-email" class="form-control" placeholder="Add another Google email...">
+              <button type="button" class="btn btn-sm btn-primary" onclick="addApprovedEmail()">+ Add Email</button>
             </div>
           </div>
         </div>
