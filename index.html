@@ -2760,7 +2760,7 @@
         })),
         ingredientRegister: (Array.isArray(saved.ingredientRegister) ? saved.ingredientRegister : def.ingredientRegister).map(ing => ({
           ...ing,
-          name: (ing.name || '').replace(/Narello\s*(Cubed)?\s*Mozzarella/gi, 'Mozzarella').replace(/Narello\s*mozzarella/gi, 'Mozzarella').trim()
+          name: (ing.name || '').replace(/Narello\s*(Cubed)?\s*Mozzarella/gi, 'Mozzarella').replace(/Fior\s+di\s+latte\s+Mozzarella/gi, 'Mozzarella').replace(/Narello\s*mozzarella/gi, 'Mozzarella').trim()
         })),
         cleaningSchedule: (Array.isArray(saved.cleaningSchedule) ? saved.cleaningSchedule : def.cleaningSchedule).map(s => ({
           ...s,
