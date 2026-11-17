@@ -821,6 +821,19 @@
     .toast-msg.error { border-left-color: var(--argon-danger); }
 
     body.eho-readonly .owner-only { display: none !important; }
+    body.eho-readonly #tab-today,
+    body.eho-readonly #tab-system {
+      display: none !important;
+    }
+    body.eho-readonly input:not(#filter-search):not(#filter-type):not(#filter-from):not(#filter-to):not(#doc-filter-category):not(#exp-from):not(#exp-to):not(#exp-filter-type),
+    body.eho-readonly select:not(#filter-type):not(#doc-filter-category):not(#exp-filter-type),
+    body.eho-readonly textarea,
+    body.eho-readonly button.owner-action,
+    body.eho-readonly .check-card {
+      pointer-events: none !important;
+      user-select: none !important;
+      cursor: not-allowed !important;
+    }
 
     @media print {
       .argon-header, .nav-tabs, .mobile-bottom-nav, .log-launcher-grid, .owner-only, #eho-banner, .no-print, .section-banner {
@@ -2385,6 +2398,10 @@
     }
 
     function toggleAllCheckboxesInContainer(containerId, checkState = true) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Action locked.', true);
+        return false;
+      }
       const container = document.getElementById(containerId);
       if (!container) return;
       container.querySelectorAll('input[type="checkbox"]').forEach(cb => {
@@ -2401,6 +2418,10 @@
     }
 
     function appendDeliveryItem(itemName) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Action locked.', true);
+        return false;
+      }
       const input = document.getElementById('del-items');
       if (!input.value.trim()) {
         input.value = itemName;
@@ -2804,6 +2825,9 @@
     const FIRESTORE_REST_BASE = "https://firestore.googleapis.com/v1/projects/wahpizzafoodsafety/databases/(default)/documents/wah_haccp/production_state";
 
     async function saveStateViaRest(stateData) {
+      if (!isOwnerSessionActive) {
+        throw new Error("Read-Only Mode active: Cloud write rejected.");
+      }
       const activeTokens = stateData.ehoLinks.filter(l => l.status === 'Active').map(l => l.token);
       const jsonPayload = JSON.stringify({
         ...stateData,
@@ -2845,6 +2869,10 @@
     }
 
     async function saveState() {
+      if (!isOwnerSessionActive) {
+        console.warn("🛡️ Write blocked: Application is in Read-Only mode. No changes can be saved or recorded.");
+        return false;
+      }
       try {
         // 1. Save to in-memory/local storage
         try {
@@ -3060,6 +3088,19 @@
       return false;
     }
 
+    function updateFormControlsReadOnlyState(isReadOnly) {
+      const inputs = document.querySelectorAll('#tab-today input, #tab-today select, #tab-today textarea, #tab-system input, #tab-system select, #tab-system textarea');
+      inputs.forEach(el => {
+        if (isReadOnly) {
+          el.setAttribute('disabled', 'disabled');
+          el.setAttribute('readonly', 'readonly');
+        } else {
+          el.removeAttribute('disabled');
+          el.removeAttribute('readonly');
+        }
+      });
+    }
+
     function updateAuthUI() {
       const roleBadge = document.getElementById('role-badge');
       const authToggleBtn = document.getElementById('auth-toggle-btn');
@@ -3080,7 +3121,7 @@
       } else {
         body.classList.add('eho-readonly');
         if (roleBadge) {
-          roleBadge.textContent = '👁️ Read-Only View';
+          roleBadge.textContent = '🔒 Read-Only Mode (Writing Locked)';
           roleBadge.style.background = 'rgba(255, 255, 255, 0.2)';
           roleBadge.style.color = '#fff';
         }
@@ -3093,6 +3134,7 @@
           switchMainTab('records');
         }
       }
+      updateFormControlsReadOnlyState(!isOwnerSessionActive);
       renderApprovedEmailsList();
     }
 
@@ -3109,6 +3151,10 @@
     }
 
     function addApprovedEmail() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Action locked.', true);
+        return false;
+      }
       const input = document.getElementById('new-approved-email');
       const val = (input?.value || '').trim().toLowerCase();
       if (!val || !val.includes('@')) return showToast('Please enter a valid email address.', true);
@@ -3126,6 +3172,10 @@
     }
 
     function removeApprovedEmail(idx) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Action locked.', true);
+        return false;
+      }
       if (!appState.systemSettings || !appState.systemSettings.approvedEmails) return;
       const em = appState.systemSettings.approvedEmails[idx];
       if (em.toLowerCase() === 'beeston.mail@gmail.com') {
@@ -3250,6 +3300,10 @@
         });
 
         window.syncToFirestoreCloud = async (stateData) => {
+          if (!isOwnerSessionActive) {
+            console.warn("🛡️ Write blocked: Read-Only mode active. Firebase sync rejected.");
+            return false;
+          }
           if (!fbAuth.currentUser) {
             try {
               await fbAuth.signInAnonymously();
@@ -3443,6 +3497,10 @@
     }
 
     function saveFirebaseConfig() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Action locked.', true);
+        return false;
+      }
       const rawInput = document.getElementById('firebase-config-input').value.trim();
       if (!rawInput) return showToast('Enter or paste your Firebase config first.', true);
       
@@ -3470,7 +3528,7 @@
      ********************************************************************/
     function switchMainTab(tabName) {
       if ((tabName === 'today' || tabName === 'system') && !isOwnerSessionActive) {
-        openAuthModal(`Please enter your Owner PIN to access ${tabName === 'today' ? "Today's Logs" : "System Settings"}.`);
+        openAuthModal(`Please sign in with Google to access ${tabName === 'today' ? "Today's Logs" : "System Settings"}.`);
         return;
       }
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
@@ -3594,6 +3652,10 @@
     }
 
     function quickFillOpeningCheck() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Form filling locked.', true);
+        return false;
+      }
       const dayType = document.getElementById('daily-day-type')?.value || 'Prep';
       toggleAllCheckboxesInContainer('daily-hygiene-fields', true);
       if (dayType === 'Both' || dayType === 'Prep') {
@@ -3610,6 +3672,10 @@
     }
 
     function quickFillClosingCheck() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Form filling locked.', true);
+        return false;
+      }
       const dayType = document.getElementById('daily-day-type')?.value || 'Prep';
       const s4 = document.getElementById('daily-closing-fields');
       if (s4) {
@@ -3638,6 +3704,10 @@
     }
 
     function quickFillStandardDailyPass() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Form filling locked.', true);
+        return false;
+      }
       quickFillOpeningCheck();
       quickFillClosingCheck();
       showToast('⚡ All day checks & standard compliant temperatures pre-filled.');
@@ -3850,6 +3920,10 @@
     }
 
     function quickConfirmJantexStandard() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Action locked.', true);
+        return false;
+      }
       let chem = appState.chemicals.find(c => 
         (c.product.toLowerCase().includes('jantex') || c.product.toLowerCase().includes('janex')) && 
         (c.product.toLowerCase().includes('sanitiser') || c.id === 'CHEM-1')
@@ -3877,6 +3951,10 @@
     }
 
     function toggleReheatTargetConfirmation() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Action locked.', true);
+        return false;
+      }
       appState.businessProfile.reheatTargetConfirmed = !appState.businessProfile.reheatTargetConfirmed;
       saveState();
       showToast(appState.businessProfile.reheatTargetConfirmed ? 'Topping reheat target confirmed as ≥ 75°C.' : 'Reheat target status reset to pending.');
@@ -3921,6 +3999,10 @@
     }
 
     async function promptSignRecord(recordType) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Signing and recording is locked. Please sign in as Owner.', true);
+        return false;
+      }
       const ukNow = getUKTimestamp();
       let details = {};
       let dateISO = getUKDateISO();
@@ -4098,6 +4180,10 @@
     }
 
     function promptAmendRecord(recId) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Record amendment is locked.', true);
+        return false;
+      }
       const rec = appState.records.find(r => r.id === recId);
       if (!rec) return;
       openModal(
@@ -4126,6 +4212,10 @@
     }
 
     function confirmRemoveSeededTestRecords() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Action locked.', true);
+        return false;
+      }
       const testCount = appState.records.filter(r => r.isTestRecord || JSON.stringify(r.details).includes('[TEST RECORD]')).length;
       if (testCount === 0) return showToast('No seeded test records remain in your diary.');
       openModal(
@@ -4564,6 +4654,10 @@
     }
 
     function renameOrReplaceDocModal(docId) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Modifying documents is locked.', true);
+        return false;
+      }
       const d = appState.documents.find(x => x.id === docId);
       if (!d) return;
       openModal(
@@ -4609,6 +4703,10 @@
     }
 
     function toggleArchiveDoc(docId) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Archiving documents is locked.', true);
+        return false;
+      }
       const d = appState.documents.find(x => x.id === docId);
       if (!d) return;
       d.archived = !d.archived;
@@ -4617,6 +4715,10 @@
     }
 
     function confirmDeleteDocModal(docId) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Deleting documents is locked.', true);
+        return false;
+      }
       const d = appState.documents.find(x => x.id === docId);
       if (!d) return;
       openModal(
@@ -4634,6 +4736,10 @@
     }
 
     function addDocumentItem() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Adding documents is locked.', true);
+        return false;
+      }
       const title = document.getElementById('doc-title').value.trim();
       const category = document.getElementById('doc-category').value;
       const expiry = document.getElementById('doc-expiry').value.trim() || 'Active';
@@ -4673,6 +4779,10 @@
     }
 
     async function uploadGalleryPhoto() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Uploading photos is locked.', true);
+        return false;
+      }
       const cat = document.getElementById('gal-category').value;
       const cap = document.getElementById('gal-caption').value.trim() || cat;
       const fileInput = document.getElementById('gal-file');
@@ -4741,6 +4851,10 @@
     }
 
     function openEditMenuAllergenModal(idx) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Editing allergen matrix is locked.', true);
+        return false;
+      }
       const item = appState.menuAllergens[idx];
       const allergenRows = UK_14_ALLERGENS.map((alg) => {
         const state = item.contains.includes(alg) ? 'CONTAINS' : (item.mayContain.includes(alg) ? 'MAY' : 'NONE');
@@ -4790,6 +4904,10 @@
     }
 
     function openAddMenuItemModal() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Adding menu items is locked.', true);
+        return false;
+      }
       const newItem = {
         pizza: '',
         contains: ['Cereals (Gluten)'],
@@ -4850,6 +4968,10 @@
     }
 
     function openEditIngredientModal(idx) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Editing ingredients is locked.', true);
+        return false;
+      }
       const ing = appState.ingredientRegister[idx];
       openModal(
         `Edit Ingredient Allergen Evidence`,
@@ -4886,6 +5008,10 @@
     }
 
     function openAddIngredientModal() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Adding ingredients is locked.', true);
+        return false;
+      }
       openModal(
         `Add New Ingredient Allergen Evidence`,
         `<div class="form-group">
@@ -4962,6 +5088,10 @@
     }
 
     function editCleaningScheduleModal(idx) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Editing cleaning schedule is locked.', true);
+        return false;
+      }
       const s = appState.cleaningSchedule[idx];
       openModal(
         `Edit Cleaning Schedule Item`,
@@ -4996,6 +5126,10 @@
     }
 
     function addCleaningScheduleItem() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Adding cleaning tasks is locked.', true);
+        return false;
+      }
       openModal(
         `Add Cleaning Schedule Task`,
         `<div class="form-group">
@@ -5034,6 +5168,10 @@
     }
 
     function editChemicalLabel(idx) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Updating chemical labels is locked.', true);
+        return false;
+      }
       const chem = appState.chemicals[idx];
       openModal(
         `Update Label Details: ${chem.product}`,
@@ -5546,6 +5684,10 @@
     }
 
     function createEhoInspectionLink() {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Creating inspection links is locked.', true);
+        return false;
+      }
       const label = document.getElementById('eho-link-label').value.trim() || 'Cardiff EHO Inspection Link';
       const hours = parseInt(document.getElementById('eho-link-duration').value, 10) || 168;
       const token = 'EHO-' + Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -5576,6 +5718,10 @@
     }
 
     function revokeEhoInspectionLink(token) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Revoking inspection links is locked.', true);
+        return false;
+      }
       const link = appState.ehoLinks.find(l => l.token === token);
       if (!link) return;
       link.status = 'Revoked';
@@ -5692,6 +5838,10 @@
     }
 
     function restoreFromBackupJson(event) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Restoring backups is locked.', true);
+        return false;
+      }
       const file = event.target.files?.[0];
       if (!file) return;
       const reader = new FileReader();
@@ -5749,6 +5899,35 @@
         URL.revokeObjectURL(url);
       }, 250);
     }
+
+    // Global Defense-in-Depth: Block and revert any input, change, or submit events when in Read-Only Mode
+    ['input', 'change', 'submit'].forEach(eventType => {
+      document.addEventListener(eventType, function(e) {
+        if (isOwnerSessionActive) return; // Full editing permitted for authenticated owner
+
+        const target = e.target;
+        if (!target) return;
+
+        // Allow legitimate read-only filters & search inputs
+        const allowedIds = ['filter-search', 'filter-type', 'filter-from', 'filter-to', 'doc-filter-category', 'exp-from', 'exp-to', 'exp-filter-type'];
+        if (allowedIds.includes(target.id)) return;
+
+        // If target is inside an allowed filter/search container, permit it
+        if (target.closest('#tab-records .filter-card') || target.closest('#doc-filter-category')) return;
+
+        // Otherwise, intercept and block
+        e.stopImmediatePropagation();
+        e.preventDefault();
+
+        if (target.type === 'checkbox' || target.type === 'radio') {
+          target.checked = !target.checked; // Immediately revert checked status
+          if (typeof syncCheckCardStyle === 'function') syncCheckCardStyle(target);
+        } else if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+          target.blur();
+        }
+        showToast('🔒 Read-Only Mode: Recording and data modification are locked.', true);
+      }, true); // Capturing phase executes before any inline or element event handlers
+    });
 
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('daily-date').value = getUKDateISO();
