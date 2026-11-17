@@ -772,9 +772,15 @@
     }
     .gallery-card img {
       width: 100%;
-      height: 155px;
+      height: 165px;
       object-fit: cover;
       background: #eee;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .gallery-card img:hover {
+      opacity: 0.92;
+      transform: scale(1.02);
     }
     .gallery-card-body { padding: 0.75rem; }
 
@@ -825,8 +831,8 @@
     body.eho-readonly #tab-system {
       display: none !important;
     }
-    body.eho-readonly input:not(#filter-search):not(#filter-type):not(#filter-from):not(#filter-to):not(#doc-filter-category):not(#exp-from):not(#exp-to):not(#exp-filter-type),
-    body.eho-readonly select:not(#filter-type):not(#doc-filter-category):not(#exp-filter-type),
+    body.eho-readonly input:not(#filter-search):not(#filter-type):not(#filter-from):not(#filter-to):not(#doc-filter-category):not(#gal-filter-category):not(#exp-from):not(#exp-to):not(#exp-filter-type),
+    body.eho-readonly select:not(#filter-type):not(#doc-filter-category):not(#gal-filter-category):not(#exp-filter-type),
     body.eho-readonly textarea,
     body.eho-readonly button.owner-action,
     body.eho-readonly .check-card {
@@ -1845,8 +1851,24 @@
       <!-- Captioned Premises Inspection Gallery -->
       <div class="card">
         <div class="card-header">
-          <h3>📸 Captioned Premises & Setup Inspection Gallery</h3>
-          <span class="badge badge-primary">Camera / Photo Library / Files • Auto-Optimised JPEG</span>
+          <div>
+            <h3 style="margin:0;">📸 Captioned Premises & Setup Inspection Gallery</h3>
+            <div style="font-size:0.8rem; color:var(--argon-muted);">Visual evidence for EHO audit. Click any photo to view full size.</div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <select id="gal-filter-category" class="form-control" style="width:200px; font-size:0.8rem;" onchange="renderDocumentsAndGallery()" aria-label="Filter gallery photos by category">
+              <option value="ALL">All Inspection Areas</option>
+              <option value="Handwashing (Dedicated 2nd Sink)">Handwashing (Dedicated 2nd Sink)</option>
+              <option value="Ovens / Cooking Equipment (Gozney Arc)">Ovens / Cooking Equipment (Gozney Arc)</option>
+              <option value="Outdoor LPG Storage & Connections">Outdoor LPG Storage & Connections</option>
+              <option value="Refrigeration (Domestic Fridge @ 4°C)">Refrigeration (Domestic Fridge @ 4°C)</option>
+              <option value="Food Storage Area">Food Storage Area</option>
+              <option value="Prep Area & Mechanical Mixer">Prep Area & Mechanical Mixer</option>
+              <option value="Water / Waste Caddies">Water / Waste Caddies</option>
+              <option value="Exterior Pickup Area / Fit-Out">Exterior Pickup Area / Fit-Out</option>
+              <option value="Fire Blanket & Extinguisher">Fire Blanket & Extinguisher</option>
+            </select>
+          </div>
         </div>
         <div class="card-body">
           <div class="owner-only" style="background:#f6f9fc; padding:1rem; border-radius:var(--argon-radius); margin-bottom:1.25rem; border:1px solid var(--argon-border);">
@@ -4621,16 +4643,69 @@
       `).join('');
 
       const galGrid = document.getElementById('gallery-grid-container');
-      galGrid.innerHTML = appState.gallery.map(g => `
+      const galFilter = document.getElementById('gal-filter-category')?.value || 'ALL';
+      const visibleGallery = appState.gallery.filter(g => galFilter === 'ALL' || g.category === galFilter);
+
+      galGrid.innerHTML = visibleGallery.length === 0
+        ? `<div style="grid-column: 1 / -1; text-align:center; padding:2rem; color:var(--argon-muted); background:#f8f9fe; border-radius:6px; border:1px dashed #cbd5e1;">No inspection photos found in this category. Use the upload box above to add photos.</div>`
+        : visibleGallery.map(g => `
         <div class="gallery-card">
-          <img src="${escapeHtml(g.imageUrl)}" alt="${escapeHtml(g.caption)}">
+          <img src="${escapeHtml(g.imageUrl)}" alt="${escapeHtml(g.caption)}" onclick="viewGalleryPhotoModal('${escapeHtml(g.id)}')" title="Click to view full size">
           <div class="gallery-card-body">
             <span class="badge badge-primary" style="margin-bottom:6px;">${escapeHtml(g.category)}</span>
-            <p style="margin:4px 0; font-size:0.84rem; color:var(--argon-heading); font-weight:600;">${escapeHtml(g.caption)}</p>
-            <div style="font-size:0.72rem; color:var(--argon-muted);">Logged: ${escapeHtml(g.timestamp)}</div>
+            <p style="margin:4px 0; font-size:0.84rem; color:var(--argon-heading); font-weight:600; min-height:2.2em;">${escapeHtml(g.caption)}</p>
+            <div style="font-size:0.72rem; color:var(--argon-muted); margin-bottom:8px;">Logged: ${escapeHtml(g.timestamp)}</div>
+            <div style="display:flex; gap:6px; justify-content:space-between; align-items:center;">
+              <button class="btn btn-sm btn-info" onclick="viewGalleryPhotoModal('${escapeHtml(g.id)}')">🔍 Full Size</button>
+              <button class="btn btn-sm btn-danger owner-only" onclick="confirmDeleteGalleryPhotoModal('${escapeHtml(g.id)}')">🗑️ Delete</button>
+            </div>
           </div>
         </div>
       `).join('');
+    }
+
+    function viewGalleryPhotoModal(photoId) {
+      const g = appState.gallery.find(x => x.id === photoId);
+      if (!g) return;
+      openModal(
+        escapeHtml(g.caption || g.category || 'Inspection Photo'),
+        `<div style="text-align:center;">
+           <img src="${escapeHtml(g.imageUrl)}" alt="${escapeHtml(g.caption)}" style="max-width:100%; max-height:65vh; border-radius:6px; box-shadow:0 4px 12px rgba(0,0,0,0.15); object-fit:contain;">
+           <div style="margin-top:12px; font-size:0.85rem; color:var(--argon-muted); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:0 4px;">
+             <span class="badge badge-primary">${escapeHtml(g.category)}</span>
+             <span>📅 Logged: <strong>${escapeHtml(g.timestamp)}</strong></span>
+           </div>
+         </div>`,
+        `<a class="btn btn-primary" href="${escapeHtml(g.imageUrl)}" download="${escapeHtml((g.caption || g.id).replace(/[^a-z0-9]/gi, '_'))}.jpg">⬇️ Download Photo</a>
+         ${isOwnerSessionActive ? `<button class="btn btn-danger owner-only" onclick="confirmDeleteGalleryPhotoModal('${escapeHtml(g.id)}')">🗑️ Delete Photo</button>` : ''}
+         <button class="btn btn-secondary" onclick="closeModal()">Close</button>`
+      );
+    }
+
+    function confirmDeleteGalleryPhotoModal(photoId) {
+      if (!isOwnerSessionActive) {
+        showToast('🔒 Read-Only Mode: Deleting photos is locked.', true);
+        return false;
+      }
+      const g = appState.gallery.find(x => x.id === photoId);
+      if (!g) return;
+      openModal(
+        'Confirm Photo Deletion',
+        `<p>Are you sure you want to permanently delete this inspection photo from your gallery?</p>
+         <div style="background:#f6f9fc; padding:10px 12px; border-radius:6px; border:1px solid #e9ecef; margin:12px 0; font-size:0.85rem;">
+           <strong>Category:</strong> ${escapeHtml(g.category)}<br>
+           <strong>Caption:</strong> ${escapeHtml(g.caption)}<br>
+           <strong>Logged:</strong> ${escapeHtml(g.timestamp)}
+         </div>`,
+        `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+         <button class="btn btn-danger" id="confirm-del-gal-btn">🗑️ Delete Permanently</button>`
+      );
+      document.getElementById('confirm-del-gal-btn').onclick = () => {
+        appState.gallery = appState.gallery.filter(x => x.id !== photoId);
+        saveState();
+        closeModal();
+        showToast('Inspection photo permanently deleted.');
+      };
     }
 
     function viewDocumentModal(docId) {
@@ -4865,8 +4940,10 @@
           timestamp: getUKTimestamp(),
           imageUrl: compressedUrl
         });
-        saveState();
+        await saveState();
         showToast('Inspection photo optimised and saved.');
+        document.getElementById('gal-caption').value = '';
+        fileInput.value = '';
       } catch (e) {
         showToast('Image optimisation error.', true);
       }
@@ -5969,7 +6046,7 @@
         if (!target) return;
 
         // Allow legitimate read-only filters & search inputs
-        const allowedIds = ['filter-search', 'filter-type', 'filter-from', 'filter-to', 'doc-filter-category', 'exp-from', 'exp-to', 'exp-filter-type'];
+        const allowedIds = ['filter-search', 'filter-type', 'filter-from', 'filter-to', 'doc-filter-category', 'gal-filter-category', 'exp-from', 'exp-to', 'exp-filter-type'];
         if (allowedIds.includes(target.id)) return;
 
         // If target is inside an allowed filter/search container, permit it
