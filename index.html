@@ -827,6 +827,19 @@
     .toast-msg.error { border-left-color: var(--argon-danger); }
 
     body.eho-readonly .owner-only { display: none !important; }
+    /* Hard Access Lock: Zero visibility when unauthenticated */
+    body.app-locked {
+      overflow: hidden !important;
+    }
+    body.app-locked .argon-header,
+    body.app-locked .nav-tabs,
+    body.app-locked .main-container,
+    body.app-locked .mobile-bottom-nav,
+    body.app-locked #eho-banner,
+    body.app-locked .section-banner {
+      display: none !important;
+    }
+
     body.eho-readonly #tab-today,
     body.eho-readonly #tab-system {
       display: none !important;
@@ -857,26 +870,28 @@
   <div id="auth-gate-overlay" role="dialog" aria-labelledby="auth-gate-title">
     <div class="auth-card">
       <div style="text-align:center; margin-bottom:1.25rem;">
-        <img src="./logo.png" alt="The Wah Pizza Co. Logo" style="width:72px; height:72px; border-radius:50%; margin-bottom:10px; box-shadow:0 3px 8px rgba(0,0,0,0.15); background:#fff; padding:3px;">
-        <div><span class="badge badge-primary">Private Food Safety Portal</span></div>
-        <h2 id="auth-gate-title" style="margin:8px 0 4px 0; color:var(--argon-heading);">The Wah Pizza Co.</h2>
-        <p style="margin:0; font-size:0.82rem; color:var(--argon-muted);">Cardiff Home Pickup Pop-Up • Owner Verification</p>
+        <img src="./logo.png" alt="The Wah Pizza Co. Logo" style="width:76px; height:76px; border-radius:50%; margin-bottom:10px; box-shadow:0 3px 10px rgba(0,0,0,0.2); background:#fff; padding:3px;">
+        <div><span class="badge badge-primary">Private Business System</span></div>
+        <h2 id="auth-gate-title" style="margin:8px 0 4px 0; color:var(--argon-heading); font-size:1.4rem;">The Wah Pizza Co.</h2>
+        <p style="margin:0; font-size:0.82rem; color:var(--argon-muted);">Private Food Safety & HACCP Management System</p>
+      </div>
+
+      <div style="background:#f8f9fe; border:1px solid #e2e8f0; border-radius:6px; padding:10px 14px; margin-bottom:14px; font-size:0.78rem; color:var(--argon-heading); text-align:center; line-height:1.4;">
+        🔒 <strong>Authorized Personnel Only</strong><br>
+        <span style="font-size:0.73rem; color:var(--argon-muted);">This private system contains proprietary recipes and operational food safety controls. Sign in with an approved Google account to continue.</span>
       </div>
 
       <!-- Stay Signed In Duration -->
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label" for="auth-session-duration">Stay Signed In For</label>
         <select id="auth-session-duration" class="form-control">
-          <option value="7" selected>7 Days (Recommended for Kitchen Tablet / Phone)</option>
+          <option value="7" selected>7 Days (Recommended for Kitchen Phone / Tablet)</option>
           <option value="30">30 Days (Monthly Operational Window)</option>
           <option value="1">24 Hours (Single Service Day)</option>
           <option value="0">Until Browser Closes (Single Session)</option>
         </select>
       </div>
 
-      <div style="background:#f8f9fe; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; margin-bottom:12px; font-size:0.75rem; color:var(--argon-heading); text-align:center;">
-        🔒 Authorized Owner: <strong>beeston.mail@gmail.com</strong>
-      </div>
       <div id="auth-modal-error-box" style="display:none; margin-bottom:12px; padding:10px 12px; background:#fff5f5; border-left:4px solid var(--argon-danger); color:#d9254b; font-size:0.8rem; border-radius:4px; line-height:1.4;"></div>
 
       <!-- Primary: Google Sign-In Button -->
@@ -890,9 +905,28 @@
         Sign in with Google
       </button>
 
-      <button class="btn btn-secondary btn-lg-block" onclick="closeAuthModal()">✕ Cancel (Continue in Read-Only Mode)</button>
-      <p style="font-size:0.73rem; color:var(--argon-muted); text-align:center; margin-top:12px; margin-bottom:0;">
-        Protected exclusively by Google OAuth & Firebase Cloud Sync.
+      <!-- Cardiff EHO / Inspector Access Section -->
+      <div style="margin-top:16px; border-top:1px solid #e9ecef; padding-top:14px;">
+        <div style="text-align:center; margin-bottom:8px;">
+          <a href="javascript:void(0)" onclick="toggleGateEhoInput()" id="gate-eho-toggle-link" style="font-size:0.78rem; color:var(--argon-primary); font-weight:600; text-decoration:none;">
+            🏛️ Cardiff Council EHO / Inspector Pass?
+          </a>
+        </div>
+        <div id="gate-eho-input-box" style="display:none;">
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="gate-eho-token-input" class="form-control" placeholder="Token (e.g. EHO-CARDIFF1)" style="font-family:monospace; font-size:0.8rem; text-transform:uppercase; text-align:center;">
+            <button type="button" class="btn btn-primary btn-sm" onclick="submitGateEhoToken()">Unlock</button>
+          </div>
+          <div id="gate-eho-error" style="display:none; margin-top:6px; font-size:0.75rem; color:var(--argon-danger); text-align:center;"></div>
+        </div>
+      </div>
+
+      <div id="auth-gate-cancel-btn-box" style="display:none; margin-top:12px;">
+        <button class="btn btn-secondary btn-sm-block" onclick="closeAuthModal()">✕ Cancel & Return</button>
+      </div>
+
+      <p style="font-size:0.72rem; color:var(--argon-muted); text-align:center; margin-top:14px; margin-bottom:0;">
+        Protected by Google OAuth & Firebase Cloud Firestore.
       </p>
     </div>
   </div>
@@ -2930,6 +2964,28 @@
      ********************************************************************/
     let isOwnerSessionActive = false;
     let currentOwnerProfile = null;
+    let activeEhoSession = null;
+
+    function toggleGateEhoInput() {
+      const box = document.getElementById('gate-eho-input-box');
+      if (!box) return;
+      box.style.display = (box.style.display === 'none' || !box.style.display) ? 'block' : 'none';
+      if (box.style.display === 'block') {
+        document.getElementById('gate-eho-token-input')?.focus();
+      }
+    }
+
+    function submitGateEhoToken() {
+      const errEl = document.getElementById('gate-eho-error');
+      if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+      const input = document.getElementById('gate-eho-token-input');
+      const token = (input?.value || '').trim().toUpperCase();
+      if (!token) {
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'Please enter your inspection token.'; }
+        return;
+      }
+      openEhoReadOnlyInspection(token);
+    }
 
     function isAuthorizedOwnerEmail(email) {
       if (!email) return false;
@@ -2958,6 +3014,7 @@
     async function lockOwnerSession() {
       isOwnerSessionActive = false;
       currentOwnerProfile = null;
+      activeEhoSession = null;
       try {
         sessionStorage.removeItem('wah_owner_session');
         localStorage.removeItem('wah_google_owner_session');
@@ -2966,7 +3023,7 @@
         }
       } catch (e) {}
       updateAuthUI();
-      showToast('Signed out of Owner Mode. Read-Only EHO View active.');
+      showToast('Signed out. Portal is completely locked.');
     }
 
     function signInWithGoogle() {
@@ -3126,10 +3183,17 @@
     function updateAuthUI() {
       const roleBadge = document.getElementById('role-badge');
       const authToggleBtn = document.getElementById('auth-toggle-btn');
+      const gateOverlay = document.getElementById('auth-gate-overlay');
+      const cancelBtnBox = document.getElementById('auth-gate-cancel-btn-box');
       const body = document.body;
 
       if (isOwnerSessionActive) {
+        // OWNER AUTHENTICATED: Full access
+        body.classList.remove('app-locked');
         body.classList.remove('eho-readonly');
+        if (gateOverlay) gateOverlay.style.display = 'none';
+        if (cancelBtnBox) cancelBtnBox.style.display = 'block';
+
         if (roleBadge) {
           const name = currentOwnerProfile?.email || 'beeston.mail@gmail.com';
           roleBadge.textContent = `👤 ${name}`;
@@ -3140,10 +3204,15 @@
           authToggleBtn.textContent = '🔒 Sign Out';
           authToggleBtn.className = 'btn btn-sm btn-secondary';
         }
-      } else {
+      } else if (activeEhoSession) {
+        // EHO INSPECTOR PASS: Read-only inspection mode
+        body.classList.remove('app-locked');
         body.classList.add('eho-readonly');
+        if (gateOverlay) gateOverlay.style.display = 'none';
+        if (cancelBtnBox) cancelBtnBox.style.display = 'none';
+
         if (roleBadge) {
-          roleBadge.textContent = '🔒 Read-Only Mode (Writing Locked)';
+          roleBadge.textContent = '🏛️ Cardiff EHO Inspection Pass';
           roleBadge.style.background = 'rgba(255, 255, 255, 0.2)';
           roleBadge.style.color = '#fff';
         }
@@ -3154,6 +3223,22 @@
         const currentActive = document.querySelector('.tab-pane.active');
         if (currentActive && (currentActive.id === 'tab-today' || currentActive.id === 'tab-system')) {
           switchMainTab('records');
+        }
+      } else {
+        // COMPLETELY LOCKED: Unauthenticated visitor
+        body.classList.add('app-locked');
+        body.classList.add('eho-readonly');
+        if (gateOverlay) gateOverlay.style.display = 'flex';
+        if (cancelBtnBox) cancelBtnBox.style.display = 'none';
+
+        if (roleBadge) {
+          roleBadge.textContent = '🔒 Portal Locked';
+          roleBadge.style.background = 'rgba(255, 255, 255, 0.2)';
+          roleBadge.style.color = '#fff';
+        }
+        if (authToggleBtn) {
+          authToggleBtn.textContent = '🔓 Sign In';
+          authToggleBtn.className = 'btn btn-sm btn-info';
         }
       }
       updateFormControlsReadOnlyState(!isOwnerSessionActive);
@@ -5870,19 +5955,25 @@
     function openEhoReadOnlyInspection(token) {
       checkEhoLinkExpirations();
       const link = appState.ehoLinks.find(l => l.token === token);
-      if (!link) return showToast('Invalid EHO inspection token.', true);
+      const errEl = document.getElementById('gate-eho-error') || document.getElementById('auth-modal-error-box');
 
-      if (link.status !== 'Active') {
-        logEhoEvent('BLOCKED_ACCESS', token, `Attempted to open ${link.status.toLowerCase()} link`);
-        saveState();
-        return showToast(`Access Denied: Inspection link ${token} is ${link.status.toUpperCase()}.`, true);
+      if (!link) {
+        const msg = `Invalid inspection token "${token}". Please check the token provided by David Beeston.`;
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = msg; }
+        return showToast(msg, true);
       }
 
-      link.openCount += 1;
+      if (link.status !== 'Active') {
+        const msg = `Access Denied: Inspection pass ${token} is ${link.status.toUpperCase()}. Please request an updated pass.`;
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = msg; }
+        return showToast(msg, true);
+      }
+
+      link.openCount = (link.openCount || 0) + 1;
       link.lastOpenedUK = getUKTimestamp();
       logEhoEvent('OPENED', token, `Read-Only EHO View accessed (Open #${link.openCount})`);
-      saveState();
 
+      activeEhoSession = link;
       isOwnerSessionActive = false;
       try { sessionStorage.removeItem('wah_owner_session'); } catch (e) {}
       updateAuthUI();
@@ -5894,16 +5985,19 @@
     }
 
     function exitEhoView() {
+      activeEhoSession = null;
       if (window.location.search.includes('eho=')) {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
       document.getElementById('eho-banner').style.display = 'none';
       if (isOwnerSessionActive) {
         document.body.classList.remove('eho-readonly');
+        document.body.classList.remove('app-locked');
         switchMainTab('system');
         showToast('Returned to Owner Management View.');
       } else {
-        openAuthModal('Enter Owner PIN to unlock Owner View.');
+        updateAuthUI();
+        showToast('Exited EHO inspection view. Portal is locked.');
       }
     }
 
