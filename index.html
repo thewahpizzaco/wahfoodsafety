@@ -1325,6 +1325,7 @@
                 <button type="button" class="btn btn-sm btn-secondary" onclick="appendDeliveryItem('Dallagiovanna Flour')">+ Flour</button>
                 <button type="button" class="btn btn-sm btn-secondary" onclick="appendDeliveryItem('Rega Gold Plum Tomatoes')">+ Rega Tomatoes</button>
                 <button type="button" class="btn btn-sm btn-secondary" onclick="appendDeliveryItem('Fresh Mushrooms')">+ Mushrooms</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="appendDeliveryItem('Pecorino / Veg Parmesan')">+ Pecorino / Parmesan</button>
               </div>
             </div>
             <div class="form-group">
@@ -2756,11 +2757,11 @@
         gallery: Array.isArray(saved.gallery) ? saved.gallery : def.gallery,
         menuAllergens: (Array.isArray(saved.menuAllergens) ? saved.menuAllergens : def.menuAllergens).map(item => ({
           ...item,
-          notes: (item.notes || '').replace(/Narello\s*(Cubed)?\s*Mozzarella/gi, 'Mozzarella').replace(/Narello\s*mozzarella/gi, 'Mozzarella')
+          notes: (item.notes || '').replace(/Narello\s*(Cubed)?\s*Mozzarella/gi, 'Mozzarella').replace(/Narello\s*mozzarella/gi, 'Mozzarella').replace(/Rice\s+win\s+vinegar/gi, 'Rice wine vinegar')
         })),
         ingredientRegister: (Array.isArray(saved.ingredientRegister) ? saved.ingredientRegister : def.ingredientRegister).map(ing => ({
           ...ing,
-          name: (ing.name || '').replace(/Narello\s*(Cubed)?\s*Mozzarella/gi, 'Mozzarella').replace(/Fior\s+di\s+latte\s+Mozzarella/gi, 'Mozzarella').replace(/Narello\s*mozzarella/gi, 'Mozzarella').trim()
+          name: (ing.name || '').replace(/Narello\s*(Cubed)?\s*Mozzarella/gi, 'Mozzarella').replace(/Fior\s+di\s+latte\s+Mozzarella/gi, 'Mozzarella').replace(/Narello\s*mozzarella/gi, 'Mozzarella').replace(/Rice\s+win\s+vinegar/gi, 'Rice wine vinegar').replace(/Rice\s+win\s+vinegar/gi, 'Rice wine vinegar').trim()
         })),
         cleaningSchedule: (Array.isArray(saved.cleaningSchedule) ? saved.cleaningSchedule : def.cleaningSchedule).map(s => ({
           ...s,
