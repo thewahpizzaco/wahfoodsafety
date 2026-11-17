@@ -58,7 +58,7 @@
 
     /* Private Sign-In Gate Overlay */
     #auth-gate-overlay {
-      display: none;
+      display: flex;
       position: fixed;
       inset: 0;
       background: linear-gradient(87deg, #240a5e 0, #16043d 100%);
@@ -259,6 +259,12 @@
       .argon-header { padding: 0.55rem 0.75rem; }
       .brand-title { font-size: 0.94rem; }
       .main-container { margin-top: 0.5rem; padding: 0 0.5rem; }
+    }
+
+    /* Force absolute lockdown on mobile and desktop */
+    body.app-locked .mobile-bottom-nav,
+    body.app-locked nav.mobile-bottom-nav {
+      display: none !important;
     }
 
     /* CURRENT SECTION BREADCRUMB BANNER */
@@ -864,7 +870,7 @@
     }
   </style>
 </head>
-<body>
+<body class="app-locked eho-readonly">
 
   <!-- PRIVATE SIGN-IN LOCK OVERLAY -->
   <div id="auth-gate-overlay" role="dialog" aria-labelledby="auth-gate-title">
@@ -953,7 +959,7 @@
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <span class="badge badge-success" id="uk-clock-badge">Europe/London</span>
         <span class="badge badge-info" id="sync-status-badge">Local + Cloud Ready</span>
-        <span class="badge" id="role-badge" style="background:rgba(255,255,255,0.2); color:#fff; font-weight:700;">👁️ Read-Only</span>
+        <span class="badge" id="role-badge" style="background:rgba(255,255,255,0.2); color:#fff; font-weight:700;">🔒 Portal Locked</span>
         <button class="btn btn-sm btn-info" id="auth-toggle-btn" onclick="toggleAuthSession()">🔓 Owner Login</button>
       </div>
     </div>
@@ -6142,6 +6148,9 @@
         // Allow legitimate read-only filters & search inputs
         const allowedIds = ['filter-search', 'filter-type', 'filter-from', 'filter-to', 'doc-filter-category', 'gal-filter-category', 'exp-from', 'exp-to', 'exp-filter-type'];
         if (allowedIds.includes(target.id)) return;
+
+        // If target is inside gate overlay, allow normal typing without readonly toast
+        if (target.closest('#auth-gate-overlay')) return;
 
         // If target is inside an allowed filter/search container, permit it
         if (target.closest('#tab-records .filter-card') || target.closest('#doc-filter-category')) return;

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wah-safety-pwa-v2';
+const CACHE_NAME = 'wah-safety-pwa-v3';
 const STATIC_ASSETS = [
   './',
   './index.html',
