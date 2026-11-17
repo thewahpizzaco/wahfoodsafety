@@ -3271,20 +3271,25 @@
               .onSnapshot((docSnap) => {
                 if (docSnap.exists) {
                   const remoteData = docSnap.data();
-                  if (remoteData && remoteData.records) {
-                    appState = sanitizeAndMergeState(remoteData);
+                  let dataToMerge = null;
+                  if (remoteData && remoteData.jsonData) {
+                    try { dataToMerge = JSON.parse(remoteData.jsonData); } catch(e) {}
+                  } else if (remoteData && remoteData.records) {
+                    dataToMerge = remoteData;
+                  }
+                  if (dataToMerge && dataToMerge.records) {
+                    appState = sanitizeAndMergeState(dataToMerge);
                     try {
                       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
                     } catch (e) {}
                     refreshAllUI();
                     document.getElementById('sync-status-badge').textContent = '☁️ Cloud Synced';
-                    if (diagStore) diagStore.innerHTML = `✅ Firestore: Active connection (Loaded ${remoteData.records.length} records)`;
+                    if (diagStore) diagStore.innerHTML = `✅ Firestore: Active connection (Loaded ${dataToMerge.records.length} records)`;
                     const diagSync = document.getElementById('diag-last-sync');
-                    if (diagSync) diagSync.textContent = `Last cloud sync: ${remoteData.lastSyncedUK || getUKTimestamp()}`;
+                    if (diagSync) diagSync.textContent = `Last cloud sync: ${dataToMerge.lastSyncedUK || remoteData.lastSyncedUK || getUKTimestamp()}`;
                   }
                 } else {
-                  if (diagStore) diagStore.innerHTML = "ℹ️ Firestore: No remote document found yet. Writing current state...";
-                  window.syncToFirestoreCloud(appState);
+                  if (diagStore) diagStore.innerHTML = "ℹ️ Firestore: No remote document found yet.";
                 }
               }, (err) => {
                 console.error("Firestore listener error:", err);
@@ -3312,15 +3317,17 @@
             }
           }
           const activeTokens = stateData.ehoLinks.filter(l => l.status === 'Active').map(l => l.token);
-          
-          // Guard against Firestore 1MB document limit by trimming heavy raw image data if needed
-          const payload = {
+          const jsonPayload = JSON.stringify({
             ...stateData,
             activeEhoTokens: activeTokens,
             lastSyncedUK: getUKTimestamp()
-          };
+          });
 
-          await firestoreDb.collection('wah_haccp').doc('production_state').set(payload);
+          // Store as serialized jsonData string to eliminate Firestore SDK nested array limits
+          await firestoreDb.collection('wah_haccp').doc('production_state').set({
+            jsonData: jsonPayload,
+            lastSyncedUK: getUKTimestamp()
+          });
           document.getElementById('sync-status-badge').textContent = '☁️ Cloud Synced';
           const diagSync = document.getElementById('diag-last-sync');
           if (diagSync) diagSync.textContent = `Last cloud sync: ${getUKTimestamp()}`;
@@ -4678,24 +4685,46 @@
          <button class="btn btn-primary" id="save-doc-edit-btn">Save Changes</button>`
       );
 
-      document.getElementById('save-doc-edit-btn').onclick = () => {
+      document.getElementById('save-doc-edit-btn').onclick = async () => {
         d.title = document.getElementById('edit-doc-title').value.trim() || d.title;
         d.expiry = document.getElementById('edit-doc-expiry').value.trim() || d.expiry;
         const fInput = document.getElementById('edit-doc-file');
         if (fInput.files && fInput.files[0]) {
           const f = fInput.files[0];
-          if (f.size > 3 * 1024 * 1024) return showToast('HTTP 413 Error: File exceeds 3MB limit.', true);
-          const reader = new FileReader();
-          reader.onload = (ev) => {
-            d.fileName = f.name;
-            d.fileDataUrl = ev.target.result;
-            saveState();
-            closeModal();
-            showToast('Document renamed and file replaced.');
-          };
-          reader.readAsDataURL(f);
+          let fileDataUrl = null;
+          let fileName = f.name;
+
+          const isImage = f.type.startsWith('image/') || /\.(jpe?g|png|webp|heic|bmp|tiff)$/i.test(f.name);
+          if (isImage) {
+            if (f.size > 15 * 1024 * 1024) return showToast('Image photo exceeds 15MB limit.', true);
+            showToast('📸 Optimising replacement photo...');
+            try {
+              fileDataUrl = await compressImageFileToDataURL(f, 1200, 0.78);
+              if (!fileName.toLowerCase().endsWith('.jpg') && !fileName.toLowerCase().endsWith('.jpeg')) {
+                fileName = fileName.replace(/\.[^.]+$/, '') + '.jpg';
+              }
+            } catch (err) {
+              console.warn('Canvas compression failed, falling back:', err);
+            }
+          }
+
+          if (!fileDataUrl) {
+            if (f.size > 1024 * 1024) return showToast('HTTP 413 Error: File exceeds 1MB limit for Cloud sync.', true);
+            fileDataUrl = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = (ev) => resolve(ev.target.result);
+              reader.onerror = reject;
+              reader.readAsDataURL(f);
+            });
+          }
+
+          d.fileName = fileName;
+          d.fileDataUrl = fileDataUrl;
+          await saveState();
+          closeModal();
+          showToast('Document renamed and file replaced.');
         } else {
-          saveState();
+          await saveState();
           closeModal();
           showToast('Document details updated.');
         }
@@ -4735,7 +4764,7 @@
       };
     }
 
-    function addDocumentItem() {
+    async function addDocumentItem() {
       if (!isOwnerSessionActive) {
         showToast('🔒 Read-Only Mode: Adding documents is locked.', true);
         return false;
@@ -4749,22 +4778,51 @@
 
       if (fileInput.files && fileInput.files[0]) {
         const file = fileInput.files[0];
-        if (file.size > 3 * 1024 * 1024) {
-          return showToast('HTTP 413 Payload Too Large: File exceeds 3MB storage limit.', true);
+        let fileDataUrl = null;
+        let fileName = file.name;
+
+        // Auto-detect image / certificate photo and compress to optimized 1200px JPEG (~100KB)
+        const isImage = file.type.startsWith('image/') || /\.(jpe?g|png|webp|heic|bmp|tiff)$/i.test(file.name);
+        if (isImage) {
+          if (file.size > 15 * 1024 * 1024) {
+            return showToast('Image photo exceeds 15MB limit.', true);
+          }
+          showToast('📸 Optimising certificate photo...');
+          try {
+            fileDataUrl = await compressImageFileToDataURL(file, 1200, 0.78);
+            if (!fileName.toLowerCase().endsWith('.jpg') && !fileName.toLowerCase().endsWith('.jpeg')) {
+              fileName = fileName.replace(/\.[^.]+$/, '') + '.jpg';
+            }
+          } catch (imgErr) {
+            console.warn('Canvas image compression failed, falling back to direct read:', imgErr);
+          }
         }
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          appState.documents.push({
-            id: 'DOC-' + Math.floor(100 + Math.random() * 900),
-            title, category, expiry,
-            fileName: file.name,
-            archived: false,
-            fileDataUrl: e.target.result
+
+        // If non-image (e.g. PDF/document) or compression fallback
+        if (!fileDataUrl) {
+          if (file.size > 1024 * 1024) {
+            return showToast('File exceeds 1MB limit for Cloud Firestore sync. Please upload an image photo or smaller PDF.', true);
+          }
+          fileDataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
           });
-          saveState();
-          showToast('Document uploaded and saved.');
-        };
-        reader.readAsDataURL(file);
+        }
+
+        appState.documents.push({
+          id: 'DOC-' + Math.floor(100 + Math.random() * 900),
+          title, category, expiry,
+          fileName,
+          archived: false,
+          fileDataUrl
+        });
+        await saveState();
+        showToast('Document uploaded and saved to vault.');
+        document.getElementById('doc-title').value = '';
+        document.getElementById('doc-expiry').value = '';
+        fileInput.value = '';
       } else {
         appState.documents.push({
           id: 'DOC-' + Math.floor(100 + Math.random() * 900),
@@ -4773,8 +4831,10 @@
           archived: false,
           fileDataUrl: 'data:text/plain;base64,' + utf8ToBase64(`${title} (${category}) - Status: ${expiry}`)
         });
-        saveState();
+        await saveState();
         showToast('Document metadata added to vault.');
+        document.getElementById('doc-title').value = '';
+        document.getElementById('doc-expiry').value = '';
       }
     }
 
