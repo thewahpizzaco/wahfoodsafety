@@ -1,11 +1,11 @@
-const CACHE_NAME = 'wah-safety-pwa-v1';
+const CACHE_NAME = 'wah-safety-pwa-v2';
 const STATIC_ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icon.svg',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './logo.png'
 ];
 
 self.addEventListener('install', (evt) => {
