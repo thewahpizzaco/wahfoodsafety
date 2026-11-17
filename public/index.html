@@ -1050,16 +1050,16 @@
 
           <!-- MORNING QUICK ACTION BANNER -->
           <div id="morning-quick-bar" style="display:flex; justify-content:space-between; align-items:center; background:#ebf8ff; border:1px solid #bee3f8; padding:0.65rem 0.9rem; border-radius:var(--argon-radius); margin-bottom:1rem; flex-wrap:wrap; gap:8px;">
-            <div style="font-size:0.82rem; color:#2b6cb0;">
-              <strong>☀️ Open & Prep Focus:</strong> Hygiene, 48h fitness, ambient dough, domestic separation & Gozney leak test.
+            <div style="font-size:0.82rem; color:#2b6cb0;" id="morning-focus-text">
+              <strong>☀️ Open & Prep Focus:</strong> Hygiene, 48h fitness, ambient dough & domestic kitchen separation.
             </div>
             <button type="button" class="btn btn-sm btn-info" onclick="quickFillOpeningCheck()">⚡ Fast Open & Prep Pass</button>
           </div>
 
           <!-- EVENING QUICK ACTION BANNER -->
           <div id="evening-quick-bar" style="display:none; justify-content:space-between; align-items:center; background:#fffaf0; border:1px solid #feebc8; padding:0.65rem 0.9rem; border-radius:var(--argon-radius); margin-bottom:1rem; flex-wrap:wrap; gap:8px;">
-            <div style="font-size:0.82rem; color:#9c4221;">
-              <strong>🌙 Service & Close Focus:</strong> Closing fridge temp, Jantex sanitise, Gozney shut off & LPG in shed, Wales recycling.
+            <div style="font-size:0.82rem; color:#9c4221;" id="evening-focus-text">
+              <strong>🌙 Service & Close Focus:</strong> Closing fridge temp, Jantex sanitise, Gozney shut off & LPG kept outside, Wales recycling.
             </div>
             <button type="button" class="btn btn-sm btn-info" onclick="quickFillClosingCheck()">🌙 Fast Service & Close Pass</button>
           </div>
@@ -1250,16 +1250,16 @@
                 </div>
               </label>
 
-              <label class="check-card">
+              <label class="check-card" id="card-closing-lpg">
                 <input type="checkbox" id="chk-closing-lpg" onchange="syncCheckCardStyle(this)"
-                  data-pass="Pass — LPG valve shut off & stored safely in shed"
+                  data-pass="Pass — LPG valve shut off & stored safely outside"
                   data-fail="N/A — Prep day only (Ovens not used)">
                 <div class="check-card-content">
                   <div class="check-card-title">
-                    <span>Gozney Arc Off & LPG Shut Off in Shed</span>
+                    <span>Gozney Arc Off & LPG Valve Isolated Outside</span>
                     <span class="check-status-pill">UNCHECKED / ACTION</span>
                   </div>
-                  <div class="check-card-sub">Burner off, cylinder valve firmly closed, and LPG stored in outdoor shed (Leave unticked if Prep-only).</div>
+                  <div class="check-card-sub">Burner off, cylinder valve firmly closed, and LPG cylinders stored upright safely outside in well-ventilated open air.</div>
                 </div>
               </label>
 
@@ -1847,7 +1847,7 @@
                 <select id="gal-category" class="form-control">
                   <option value="Handwashing (Dedicated 2nd Sink)">Handwashing (Dedicated 2nd Sink)</option>
                   <option value="Ovens / Cooking Equipment (Gozney Arc)">Ovens / Cooking Equipment (Gozney Arc)</option>
-                  <option value="LPG Shed Storage & Connections">LPG Shed Storage & Connections</option>
+                  <option value="Outdoor LPG Storage & Connections">Outdoor LPG Storage & Connections</option>
                   <option value="Refrigeration (Domestic Fridge @ 4°C)">Refrigeration (Domestic Fridge @ 4°C)</option>
                   <option value="Food Storage Area">Food Storage Area</option>
                   <option value="Prep Area & Mechanical Mixer">Prep Area & Mechanical Mixer</option>
@@ -2476,7 +2476,7 @@
               allergenSignposting: 'Pass — Online & pickup allergen matrix active; Marinara box labels ready',
               closingFridgeTemp: '3.7°C',
               closingHygiene: 'Pass — Surfaces sanitised, open stock covered & 3-day date-labelled, food caddies emptied',
-              closingLpg: 'Pass — LPG valve shut off & stored safely in shed',
+              closingLpg: 'Pass — LPG valve shut off & stored safely outside',
               problems: 'None',
               correctiveAction: 'N/A',
               notes: '[TEST RECORD] 24h dough batch fermented cleanly at 20.2°C. Mushroom topping cooled in 55 mins.'
@@ -2584,7 +2584,7 @@
               allergenSignposting: 'Pass — Online & pickup allergen matrix active; Marinara box labels ready',
               closingFridgeTemp: '3.6°C',
               closingHygiene: 'Pass — Surfaces sanitised, open stock covered & 3-day date-labelled, food caddies emptied',
-              closingLpg: 'Pass — LPG valve shut off & stored safely in shed',
+              closingLpg: 'Pass — LPG valve shut off & stored safely outside',
               problems: 'None',
               correctiveAction: 'N/A',
               notes: '[TEST RECORD] Gozney Arc stone verified at 435°C via IR thermometer.'
@@ -2654,7 +2654,7 @@
             expiry: 'Active — Annual Review Oct 2027',
             fileName: 'Fire_Safety_And_LPG_Risk_Assessment.txt',
             archived: false,
-            fileDataUrl: 'data:text/plain;base64,' + utf8ToBase64('THE WAH PIZZA CO. — FIRE SAFETY & LPG RISK ASSESSMENT:\n\n1. Premises: Ground floor domestic kitchen & outdoor Gozney Arc cooking station.\n2. Ignition Sources: Gozney Arc LPG burner, domestic oven.\n3. Fuel Storage: Propane gas cylinders stored upright in locked outdoor garden shed with high & low ventilation; zero indoor LPG storage.\n4. Separation: 1-metre clear non-combustible perimeter around Gozney Arc oven.\n5. Emergency Equipment:\n   - Fire Blanket (BS EN 1869) mounted adjacent to kitchen exit route.\n   - Dry Powder / Foam Extinguisher (BS EN 3) positioned near service exit.\n6. Shutoff Protocol: Gas cylinder valve closed immediately after baking; soapy water leak check before every lighting.\n7. Escape Route: Unobstructed ground-floor exit.')
+            fileDataUrl: 'data:text/plain;base64,' + utf8ToBase64('THE WAH PIZZA CO. — FIRE SAFETY & LPG RISK ASSESSMENT:\n\n1. Premises: Ground floor domestic kitchen & outdoor Gozney Arc cooking station.\n2. Ignition Sources: Gozney Arc LPG burner, domestic oven.\n3. Fuel Storage: Propane gas cylinders stored upright safely outside in well-ventilated open air; zero indoor or confined space LPG storage.\n4. Separation: 1-metre clear non-combustible perimeter around Gozney Arc oven.\n5. Emergency Equipment:\n   - Fire Blanket (BS EN 1869) mounted adjacent to kitchen exit route.\n   - Dry Powder / Foam Extinguisher (BS EN 3) positioned near service exit.\n6. Shutoff Protocol: Gas cylinder valve closed immediately after baking; soapy water leak check before every lighting.\n7. Escape Route: Unobstructed ground-floor exit.')
           },
           {
             id: 'DOC-08',
@@ -2686,7 +2686,7 @@
           {
             id: 'GAL-02',
             category: 'Ovens / Cooking Equipment (Gozney Arc)',
-            caption: 'Outdoor Gozney Arc LPG pizza oven operating at 400°C+ with LPG cylinder stored in outdoor shed.',
+            caption: 'Outdoor Gozney Arc LPG pizza oven operating at 400°C+ with LPG cylinder kept safely outside.',
             timestamp: '26/10/2026, 08:32:00',
             imageUrl: createPlaceholderDiagramSVG('Gozney Arc LPG Oven (>400°C)', 'Soapy Water Connection Check • Fire Blanket Ready', '#5e72e4')
           },
@@ -3493,15 +3493,79 @@
       if (btn) btn.classList.add('active');
     }
 
+    function applyShiftAndViewVisibility() {
+      const dayType = document.getElementById('daily-day-type')?.value || 'Prep';
+      const showPrep = (dayType === 'Both' || dayType === 'Prep');
+      const showTrade = (dayType === 'Both' || dayType === 'Trading');
+
+      const s1 = document.getElementById('daily-hygiene-fields');
+      const s2 = document.getElementById('daily-prep-fields');
+      const s3 = document.getElementById('daily-trading-fields');
+      const s4 = document.getElementById('daily-closing-fields');
+      const mBar = document.getElementById('morning-quick-bar');
+      const eBar = document.getElementById('evening-quick-bar');
+      const nextBtn = document.getElementById('morning-next-btn-box');
+      const lpgCloseCard = document.getElementById('card-closing-lpg');
+
+      // Gozney Arc & LPG closing checkcard is strictly for trading days (oven used)
+      if (lpgCloseCard) {
+        lpgCloseCard.style.display = showTrade ? 'flex' : 'none';
+        if (!showTrade) {
+          const lpgCb = document.getElementById('chk-closing-lpg');
+          if (lpgCb) {
+            lpgCb.checked = false;
+            syncCheckCardStyle(lpgCb);
+          }
+        }
+      }
+
+      // Update focus text dynamically
+      const mText = document.getElementById('morning-focus-text');
+      const eText = document.getElementById('evening-focus-text');
+      if (mText) {
+        mText.innerHTML = (dayType === 'Prep')
+          ? '<strong>☀️ Open & Prep Focus:</strong> Hygiene, 48h fitness, ambient dough & 3-day stock rotation.'
+          : '<strong>☀️ Open & Prep Focus:</strong> Hygiene, 48h fitness, fridge temp, Gozney leak test & Jantex clean.';
+      }
+      if (eText) {
+        eText.innerHTML = (dayType === 'Prep')
+          ? '<strong>🌙 Prep Day Close Focus:</strong> Closing fridge temp, Jantex sanitise, open stock covered & Wales recycling.'
+          : '<strong>🌙 Service & Close Focus:</strong> Closing fridge temp, Jantex sanitise, Gozney shut off & LPG kept outside, Wales recycling.';
+      }
+
+      if (currentShiftView === 'morning') {
+        if (s1) s1.style.display = 'block';
+        if (s2) s2.style.display = showPrep ? 'block' : 'none';
+        if (s3) s3.style.display = showTrade ? 'block' : 'none';
+        if (s4) s4.style.display = 'none';
+        if (mBar) mBar.style.display = 'flex';
+        if (eBar) eBar.style.display = 'none';
+        if (nextBtn) nextBtn.style.display = 'block';
+      } else if (currentShiftView === 'evening') {
+        if (s1) s1.style.display = 'none';
+        if (s2) s2.style.display = 'none';
+        if (s3) s3.style.display = 'none';
+        if (s4) s4.style.display = 'block';
+        if (mBar) mBar.style.display = 'none';
+        if (eBar) eBar.style.display = 'flex';
+        if (nextBtn) nextBtn.style.display = 'none';
+      } else {
+        if (s1) s1.style.display = 'block';
+        if (s2) s2.style.display = showPrep ? 'block' : 'none';
+        if (s3) s3.style.display = showTrade ? 'block' : 'none';
+        if (s4) s4.style.display = 'block';
+        if (mBar) mBar.style.display = 'flex';
+        if (eBar) eBar.style.display = 'flex';
+        if (nextBtn) nextBtn.style.display = 'none';
+      }
+    }
+
     function selectDayTypePill(dayVal) {
       document.getElementById('daily-day-type').value = dayVal;
       document.querySelectorAll('.day-pill').forEach(btn => {
         btn.classList.toggle('active', btn.getAttribute('data-day') === dayVal);
       });
-      const prep = document.getElementById('daily-prep-fields');
-      const trade = document.getElementById('daily-trading-fields');
-      if (prep) prep.style.display = (dayVal === 'Both' || dayVal === 'Prep') ? 'block' : 'none';
-      if (trade) trade.style.display = (dayVal === 'Both' || dayVal === 'Trading') ? 'block' : 'none';
+      applyShiftAndViewVisibility();
     }
 
     function updateProbeExpectedRange() {
@@ -3523,65 +3587,52 @@
       if (pMorning) pMorning.classList.toggle('active', mode === 'morning');
       if (pEvening) pEvening.classList.toggle('active', mode === 'evening');
       if (pAll) pAll.classList.toggle('active', mode === 'all');
-
-      const s1 = document.getElementById('daily-hygiene-fields');
-      const s2 = document.getElementById('daily-prep-fields');
-      const s3 = document.getElementById('daily-trading-fields');
-      const s4 = document.getElementById('daily-closing-fields');
-      const mBar = document.getElementById('morning-quick-bar');
-      const eBar = document.getElementById('evening-quick-bar');
-      const nextBtn = document.getElementById('morning-next-btn-box');
-
-      if (mode === 'morning') {
-        if (s1) s1.style.display = 'block';
-        if (s2) s2.style.display = 'block';
-        if (s3) s3.style.display = 'block';
-        if (s4) s4.style.display = 'none';
-        if (mBar) mBar.style.display = 'flex';
-        if (eBar) eBar.style.display = 'none';
-        if (nextBtn) nextBtn.style.display = 'block';
-      } else if (mode === 'evening') {
-        if (s1) s1.style.display = 'none';
-        if (s2) s2.style.display = 'none';
-        if (s3) s3.style.display = 'none';
-        if (s4) s4.style.display = 'block';
-        if (mBar) mBar.style.display = 'none';
-        if (eBar) eBar.style.display = 'flex';
-        if (nextBtn) nextBtn.style.display = 'none';
-      } else {
-        if (s1) s1.style.display = 'block';
-        if (s2) s2.style.display = 'block';
-        if (s3) s3.style.display = 'block';
-        if (s4) s4.style.display = 'block';
-        if (mBar) mBar.style.display = 'flex';
-        if (eBar) eBar.style.display = 'flex';
-        if (nextBtn) nextBtn.style.display = 'none';
-      }
+      applyShiftAndViewVisibility();
     }
 
     function quickFillOpeningCheck() {
+      const dayType = document.getElementById('daily-day-type')?.value || 'Prep';
       toggleAllCheckboxesInContainer('daily-hygiene-fields', true);
-      toggleAllCheckboxesInContainer('daily-prep-fields', true);
-      toggleAllCheckboxesInContainer('daily-trading-fields', true);
+      if (dayType === 'Both' || dayType === 'Prep') {
+        toggleAllCheckboxesInContainer('daily-prep-fields', true);
+      }
+      if (dayType === 'Both' || dayType === 'Trading') {
+        toggleAllCheckboxesInContainer('daily-trading-fields', true);
+      }
       const amb = document.getElementById('daily-ambient-temp');
       if (amb && !amb.value) amb.value = '20.0';
       const fr = document.getElementById('daily-fridge-temp');
-      if (fr && !fr.value) fr.value = '3.6';
+      if (fr && !fr.value && (dayType === 'Both' || dayType === 'Trading')) fr.value = '3.6';
       const rh = document.getElementById('daily-reheat-temp');
-      if (rh && !rh.value) rh.value = '78.5';
-      showToast('☀️ Open & prep checks & standard temperatures pre-filled.');
+      if (rh && !rh.value && (dayType === 'Both' || dayType === 'Trading')) rh.value = '78.5';
+      showToast('☀️ Open & prep checks pre-filled.');
     }
 
     function quickFillClosingCheck() {
-      toggleAllCheckboxesInContainer('daily-closing-fields', true);
+      const dayType = document.getElementById('daily-day-type')?.value || 'Prep';
+      const s4 = document.getElementById('daily-closing-fields');
+      if (s4) {
+        s4.querySelectorAll('.check-card input[type="checkbox"]').forEach(cb => {
+          if (cb.id === 'chk-closing-lpg' && dayType === 'Prep') {
+            cb.checked = false;
+          } else {
+            cb.checked = true;
+          }
+          syncCheckCardStyle(cb);
+        });
+      }
       const cfr = document.getElementById('daily-closing-fridge');
-      if (cfr && !cfr.value) cfr.value = '3.7';
+      if (cfr && !cfr.value) cfr.value = '3.8';
       const prob = document.getElementById('daily-problems');
       if (prob && !prob.value) prob.value = 'None';
       const corr = document.getElementById('daily-corrective');
       if (corr && !corr.value) corr.value = 'N/A';
       const notes = document.getElementById('daily-notes');
-      if (notes && !notes.value) notes.value = 'Closing two-stage Jantex clean complete, Gozney Arc off & LPG in shed, Wales commercial recycling segregated.';
+      if (notes && !notes.value) {
+        notes.value = (dayType === 'Prep')
+          ? 'Prep day complete: Dough balled & ambient fermented, two-stage Jantex clean verified, food caddies emptied.'
+          : 'Closing two-stage Jantex clean complete, Gozney Arc off & LPG isolated outside, Wales commercial recycling segregated.';
+      }
       showToast('🌙 Service & close checks pre-filled. Ready to sign!');
     }
 
@@ -3893,7 +3944,7 @@
           allergenSignposting: (dayType === 'Both' || dayType === 'Trading') ? readCheckValue('chk-allergen-sign') : 'N/A',
           closingFridgeTemp: (dayType !== 'Closed') ? (document.getElementById('daily-closing-fridge').value ? document.getElementById('daily-closing-fridge').value + '°C' : 'Not recorded') : 'N/A',
           closingHygiene: (dayType !== 'Closed') ? readCheckValue('chk-closing-hygiene') : 'N/A',
-          closingLpg: (dayType !== 'Closed') ? readCheckValue('chk-closing-lpg') : 'N/A',
+          closingLpg: (dayType === 'Both' || dayType === 'Trading') ? readCheckValue('chk-closing-lpg') : 'N/A — Prep day only (Ovens not used)', 
           walesCommercialRecycling: (dayType !== 'Closed') ? readCheckValue('chk-closing-recycling') : 'N/A',
           problems: document.getElementById('daily-problems').value.trim() || 'None',
           correctiveAction: document.getElementById('daily-corrective').value.trim() || 'N/A',
@@ -4151,9 +4202,9 @@
           { label: 'Gozney LPG Leak Test', val: d.lpgCheck },
           { label: 'Gozney Acrylamide Control', val: d.ovenAndAcrylamide },
           { label: 'Closing Sanitise & Open Lids', val: d.closingHygiene },
-          { label: 'LPG Off & In Shed', val: d.closingLpg },
+          { label: 'LPG Off & Stored Outside', val: d.closingLpg },
           { label: 'Wales Commercial Recycling', val: d.walesCommercialRecycling }
-        ].filter(c => c.val && c.val !== 'N/A');
+        ].filter(c => c.val && c.val !== 'N/A' && !String(c.val).startsWith('N/A'));
 
         let pillsHtml = `<div class="audit-control-pills">`;
         checks.forEach(c => {
@@ -4198,7 +4249,7 @@
                 <div><strong>Pest & Fire Safety:</strong> ${escapeHtml(d.pestWaste || 'N/A')}</div>
                 <div><strong>Allergen Signposting:</strong> ${escapeHtml(d.allergenSignposting || 'N/A')}</div>
                 <div><strong>Closing Hygiene & Stock Lids:</strong> ${escapeHtml(d.closingHygiene || 'N/A')}</div>
-                <div><strong>LPG Off & Stored in Shed:</strong> ${escapeHtml(d.closingLpg || 'N/A')}</div>
+                <div><strong>LPG Off & Stored Outside:</strong> ${escapeHtml(d.closingLpg || 'N/A')}</div>
                 <div><strong>Wales Commercial Recycling:</strong> ${escapeHtml(d.walesCommercialRecycling || 'N/A')}</div>
               </div>
             </div>
@@ -5096,7 +5147,7 @@
             d.openStockRotation?.toLowerCase().includes('pass') ? 'Stock-3Day' : null,
             d.ovenAndAcrylamide?.toLowerCase().includes('pass') ? 'Acrylamide-Turn' : null,
             d.closingHygiene?.toLowerCase().includes('pass') ? 'Closing-Sanitise' : null,
-            d.closingLpg?.toLowerCase().includes('pass') ? 'LPG-In-Shed' : null
+            d.closingLpg?.toLowerCase().includes('pass') ? 'LPG-Outside' : null
           ].filter(Boolean);
 
           controlsSummary = checks.length > 0 ? `Passed (${checks.join(', ')})` : 'All Controls Verified';
