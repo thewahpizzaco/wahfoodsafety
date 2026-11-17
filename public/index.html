@@ -2741,6 +2741,40 @@
       };
     }
 
+    function sanitizeAndMergeState(saved) {
+      const def = getDefaultState();
+      if (!saved) return def;
+      return {
+        ...def,
+        ...saved,
+        systemSettings: { ...def.systemSettings, ...(saved.systemSettings || {}) },
+        businessProfile: { ...def.businessProfile, ...(saved.businessProfile || {}) },
+        records: Array.isArray(saved.records) ? saved.records : def.records,
+        documents: (() => {
+          const savedList = (Array.isArray(saved.documents) ? saved.documents : def.documents).map(d => ({ archived: false, ...d }));
+          def.documents.forEach(d => {
+            if (!savedList.some(x => x.id === d.id)) savedList.push(d);
+          });
+          return savedList;
+        })(),
+        gallery: Array.isArray(saved.gallery) ? saved.gallery : def.gallery,
+        menuAllergens: Array.isArray(saved.menuAllergens) ? saved.menuAllergens : def.menuAllergens,
+        ingredientRegister: Array.isArray(saved.ingredientRegister) ? saved.ingredientRegister : def.ingredientRegister,
+        cleaningSchedule: (Array.isArray(saved.cleaningSchedule) ? saved.cleaningSchedule : def.cleaningSchedule).map(s => ({
+          ...s,
+          product: (s.product || '').replace(/Janex/gi, 'Jantex'),
+          method: (s.method || '').replace(/Janex/gi, 'Jantex')
+        })),
+        chemicals: (Array.isArray(saved.chemicals) ? saved.chemicals : def.chemicals).map(c => ({
+          ...c,
+          product: (c.product || '').replace(/Janex/gi, 'Jantex'),
+          area: (c.area || '').replace(/Janex/gi, 'Jantex')
+        })),
+        ehoLinks: Array.isArray(saved.ehoLinks) ? saved.ehoLinks : def.ehoLinks,
+        ehoAuditLog: Array.isArray(saved.ehoAuditLog) ? saved.ehoAuditLog : def.ehoAuditLog
+      };
+    }
+
     function migrateAndMergeState() {
       const def = getDefaultState();
       try {
@@ -2750,35 +2784,7 @@
           return def;
         }
         const saved = JSON.parse(raw);
-        const merged = {
-          ...def,
-          ...saved,
-          systemSettings: { ...def.systemSettings, ...(saved.systemSettings || {}) },
-          businessProfile: { ...def.businessProfile, ...(saved.businessProfile || {}) },
-          records: Array.isArray(saved.records) ? saved.records : def.records,
-          documents: (() => {
-            const savedList = (Array.isArray(saved.documents) ? saved.documents : def.documents).map(d => ({ archived: false, ...d }));
-            def.documents.forEach(d => {
-              if (!savedList.some(x => x.id === d.id)) savedList.push(d);
-            });
-            return savedList;
-          })(),
-          gallery: Array.isArray(saved.gallery) ? saved.gallery : def.gallery,
-          menuAllergens: Array.isArray(saved.menuAllergens) ? saved.menuAllergens : def.menuAllergens,
-          ingredientRegister: Array.isArray(saved.ingredientRegister) ? saved.ingredientRegister : def.ingredientRegister,
-          cleaningSchedule: (Array.isArray(saved.cleaningSchedule) ? saved.cleaningSchedule : def.cleaningSchedule).map(s => ({
-            ...s,
-            product: (s.product || '').replace(/Janex/gi, 'Jantex'),
-            method: (s.method || '').replace(/Janex/gi, 'Jantex')
-          })),
-          chemicals: (Array.isArray(saved.chemicals) ? saved.chemicals : def.chemicals).map(c => ({
-            ...c,
-            product: (c.product || '').replace(/Janex/gi, 'Jantex'),
-            area: (c.area || '').replace(/Janex/gi, 'Jantex')
-          })),
-          ehoLinks: Array.isArray(saved.ehoLinks) ? saved.ehoLinks : def.ehoLinks,
-          ehoAuditLog: Array.isArray(saved.ehoAuditLog) ? saved.ehoAuditLog : def.ehoAuditLog
-        };
+        const merged = sanitizeAndMergeState(saved);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
         return merged;
       } catch (e) {
@@ -3213,7 +3219,7 @@
                 if (docSnap.exists) {
                   const remoteData = docSnap.data();
                   if (remoteData && remoteData.records) {
-                    appState = { ...appState, ...remoteData };
+                    appState = sanitizeAndMergeState(remoteData);
                     try {
                       localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
                     } catch (e) {}
@@ -3659,8 +3665,13 @@
       }
 
       // 3. Setup Actions (Jantex, Gas cert, Insurance, Reheat target)
-      const jantexChem = appState.chemicals.find(c => c.product.toLowerCase().includes('jantex') && c.product.toLowerCase().includes('sanitiser'));
+      const jantexChem = appState.chemicals.find(c => 
+        (c.product.toLowerCase().includes('jantex') || c.product.toLowerCase().includes('janex')) && 
+        (c.product.toLowerCase().includes('sanitiser') || c.product.toLowerCase().includes('cleaner') || c.id === 'CHEM-1')
+      );
       const jantexPending = !jantexChem || 
+        !jantexChem.dilution || 
+        !jantexChem.contactTime || 
         jantexChem.dilution.toUpperCase().includes('TO CONFIRM') || 
         jantexChem.contactTime.toUpperCase().includes('TO CONFIRM');
 
@@ -3706,8 +3717,13 @@
           title: '🧴 Jantex Multi-Surface Sanitiser Label Dilution & Contact Time',
           isPending: jantexPending,
           pendingDesc: 'Dilution ratio and contact time need to be verified from your bottle label.',
-          resolvedDesc: `Verified on label: Dilution "${jantexChem?.dilution || 'Neat'}", Contact Time: "${jantexChem?.contactTime || '30s'}"`,
-          actionBtn: `<button class="btn btn-sm btn-secondary" onclick="switchMainTab('staff')">Chemical Register →</button>`
+          resolvedDesc: `Verified on label: Dilution "${jantexChem?.dilution || 'Ready to use'}", Contact Time: "${jantexChem?.contactTime || '30 seconds'}"`,
+          actionBtn: jantexPending 
+            ? `<div style="display:flex; gap:6px;">
+                 <button class="btn btn-sm btn-success" onclick="quickConfirmJantexStandard()">✓ Confirm RTU & 30s</button>
+                 <button class="btn btn-sm btn-secondary" onclick="switchMainTab('staff')">Edit Label →</button>
+               </div>`
+            : `<button class="btn btn-sm btn-secondary" onclick="switchMainTab('staff')">Chemical Register →</button>`
         },
         {
           id: 'act-gas',
@@ -3779,6 +3795,33 @@
           </div>
         `;
       }).join('');
+    }
+
+    function quickConfirmJantexStandard() {
+      let chem = appState.chemicals.find(c => 
+        (c.product.toLowerCase().includes('jantex') || c.product.toLowerCase().includes('janex')) && 
+        (c.product.toLowerCase().includes('sanitiser') || c.id === 'CHEM-1')
+      );
+      if (!chem) {
+        chem = {
+          id: 'CHEM-1',
+          product: 'Jantex Multi-Surface Sanitiser Cleaner',
+          area: 'Food prep worktops, peels, mixer, fridge interior',
+          dilution: 'Ready to use',
+          contactTime: '30 seconds (BS EN 1276 standard)'
+        };
+        appState.chemicals.push(chem);
+      } else {
+        chem.product = 'Jantex Multi-Surface Sanitiser Cleaner';
+        chem.dilution = (chem.dilution && !chem.dilution.toUpperCase().includes('TO CONFIRM')) 
+          ? chem.dilution 
+          : 'Ready to use';
+        chem.contactTime = (chem.contactTime && !chem.contactTime.toUpperCase().includes('TO CONFIRM')) 
+          ? chem.contactTime 
+          : '30 seconds (BS EN 1276 standard)';
+      }
+      saveState();
+      showToast('Jantex sanitiser confirmed: Ready to use, 30s contact time.');
     }
 
     function toggleReheatTargetConfirmation() {
@@ -4943,17 +4986,22 @@
       openModal(
         `Update Label Details: ${chem.product}`,
         `<div class="form-group">
+           <label class="form-label">Product Name</label>
+           <input type="text" id="edit-chem-product" class="form-control" value="${escapeHtml(chem.product)}">
+         </div>
+         <div class="form-group">
            <label class="form-label">Exact Dilution Ratio from Bottle Label</label>
-           <input type="text" id="edit-chem-dilution" class="form-control" value="${chem.dilution}">
+           <input type="text" id="edit-chem-dilution" class="form-control" value="${escapeHtml(chem.dilution)}">
          </div>
          <div class="form-group">
            <label class="form-label">Exact Contact Time from Bottle Label</label>
-           <input type="text" id="edit-chem-contact" class="form-control" value="${chem.contactTime}">
+           <input type="text" id="edit-chem-contact" class="form-control" value="${escapeHtml(chem.contactTime)}">
          </div>`,
         `<button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
          <button class="btn btn-primary" id="save-chem-btn">Save Verified Label Details</button>`
       );
       document.getElementById('save-chem-btn').onclick = () => {
+        chem.product = document.getElementById('edit-chem-product').value.trim() || chem.product;
         chem.dilution = document.getElementById('edit-chem-dilution').value.trim();
         chem.contactTime = document.getElementById('edit-chem-contact').value.trim();
         saveState();
@@ -5691,7 +5739,10 @@
       // 1. Immediately poll Cloud Firestore via direct REST (works on mobile Chrome iframe without cookies/IndexedDB)
       loadStateViaRest().then(remoteState => {
         if (remoteState && remoteState.records) {
-          appState = { ...appState, ...remoteState };
+          appState = sanitizeAndMergeState(remoteState);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+          } catch (e) {}
           refreshAllUI();
           document.getElementById('sync-status-badge').textContent = '☁️ Cloud Synced';
           const diagStore = document.getElementById('diag-firestore-status');
