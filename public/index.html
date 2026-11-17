@@ -1147,7 +1147,7 @@
                     <span>Open Stock 3-Day Use-By Labels & FIFO</span>
                     <span class="check-status-pill">UNCHECKED / ACTION</span>
                   </div>
-                  <div class="check-card-sub">Opened Narello mozzarella, Rega tomatoes & toppings date-labelled (Day + 2 max) and in date.</div>
+                  <div class="check-card-sub">Opened mozzarella, Rega tomatoes & toppings date-labelled (Day + 2 max) and in date.</div>
                 </div>
               </label>
             </div>
@@ -1319,9 +1319,9 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="del-items">2. Items Delivered (Quick-Tick Common Stock Below or Type)</label>
-              <input type="text" id="del-items" class="form-control" placeholder="e.g. Narello Cubed Mozzarella, Rega Plum Tomatoes">
+              <input type="text" id="del-items" class="form-control" placeholder="e.g. Mozzarella, Rega Plum Tomatoes">
               <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;">
-                <button type="button" class="btn btn-sm btn-secondary" onclick="appendDeliveryItem('Narello Cubed Mozzarella')">+ Mozzarella</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="appendDeliveryItem('Mozzarella')">+ Mozzarella</button>
                 <button type="button" class="btn btn-sm btn-secondary" onclick="appendDeliveryItem('Dallagiovanna Flour')">+ Flour</button>
                 <button type="button" class="btn btn-sm btn-secondary" onclick="appendDeliveryItem('Rega Gold Plum Tomatoes')">+ Rega Tomatoes</button>
                 <button type="button" class="btn btn-sm btn-secondary" onclick="appendDeliveryItem('Fresh Mushrooms')">+ Mushrooms</button>
@@ -1532,7 +1532,7 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="prob-food">3. Food & Batch Affected</label>
-              <input type="text" id="prob-food" class="form-control" placeholder="e.g. Narello Cubed Mozzarella tub (Batch #NM-1026)">
+              <input type="text" id="prob-food" class="form-control" placeholder="e.g. Mozzarella tub (Batch #NM-1026)">
             </div>
             <div class="form-group">
               <label class="form-label" for="prob-action">4. Immediate Action Taken</label>
@@ -1715,7 +1715,7 @@
           <div class="haccp-flow-grid">
             <div class="haccp-step-box">
               <h4>1. Purchase & Delivery</h4>
-              <div><strong>Suppliers:</strong> A Di Maria, Tesco, Lidl.<br><strong>Control:</strong> Chilled goods (Narello mozzarella) checked on arrival (target ≤ 4–5°C), packaging intact, allergen labels verified, receipts kept for traceability.</div>
+              <div><strong>Suppliers:</strong> A Di Maria, Tesco, Lidl.<br><strong>Control:</strong> Chilled goods (Mozzarella) checked on arrival (target ≤ 4–5°C), packaging intact, allergen labels verified, receipts kept for traceability.</div>
             </div>
             <div class="haccp-step-box">
               <h4>2. Chilled & Ambient Storage</h4>
@@ -2508,7 +2508,7 @@
             archivedWeek: null,
             details: {
               supplier: 'A Di Maria',
-              items: 'Molino Dallagiovanna La Napoletana 2.0 Flour, Rega Gold Plum Tomatoes, Narello Cubed Mozzarella',
+              items: 'Molino Dallagiovanna La Napoletana 2.0 Flour, Rega Gold Plum Tomatoes, Mozzarella',
               dates: 'Delivered 26/10/2026 | Use-By: 14/11/2026',
               traceability: 'Batch #NM-1026 / Inv #8841',
               condition: 'Pass — Packaging intact, clean, pest-free & within Use-By date',
@@ -2689,7 +2689,7 @@
           {
             id: 'GAL-03',
             category: 'Refrigeration (Domestic Fridge @ 4°C)',
-            caption: 'Chilled ingredient storage set to 4°C for Narello cubed mozzarella and cooled mushroom toppings.',
+            caption: 'Chilled ingredient storage set to 4°C for mozzarella and cooled mushroom toppings.',
             timestamp: '26/10/2026, 08:35:00',
             imageUrl: createPlaceholderDiagramSVG('Refrigeration Unit (Target ≤ 4°C)', 'Digital Penetration Probe Verified', '#11cdef')
           }
@@ -2699,7 +2699,7 @@
             pizza: 'Margherita (12")',
             contains: ['Cereals (Gluten)', 'Milk'],
             mayContain: [],
-            notes: 'Molino Dallagiovanna Type 0/1 Wheat Flour, Rega Gold Plum Tomatoes, Narello Cubed Mozzarella (Milk), Basil.'
+            notes: 'Molino Dallagiovanna Type 0/1 Wheat Flour, Rega Gold Plum Tomatoes, Mozzarella (Milk), Basil.'
           },
           {
             pizza: 'Marinara (12")',
@@ -2711,12 +2711,12 @@
             pizza: 'White Base Mushroom (12")',
             contains: ['Cereals (Gluten)', 'Milk'],
             mayContain: [],
-            notes: 'Wheat Flour dough, Narello Cubed Mozzarella (Milk), pre-cooked cooled & reheated Mushrooms.'
+            notes: 'Wheat Flour dough, Mozzarella (Milk), pre-cooked cooled & reheated Mushrooms.'
           }
         ],
         ingredientRegister: [
           { name: 'Molino Dallagiovanna La Napoletana 2.0 / Uniqua Blue Flour', supplier: 'A Di Maria', contains: 'Cereals containing Gluten (Wheat)', mayContain: 'Soy, Mustard (Check sack label per batch)', reviewDate: '26/10/2026' },
-          { name: 'Narello Cubed Mozzarella', supplier: 'A Di Maria', contains: 'Milk', mayContain: 'None declared', reviewDate: '26/10/2026' },
+          { name: 'Mozzarella', supplier: 'A Di Maria', contains: 'Milk', mayContain: 'None declared', reviewDate: '26/10/2026' },
           { name: 'Rega Gold Peeled Plum Tomatoes', supplier: 'A Di Maria', contains: 'None of the 14 allergens', mayContain: 'None declared', reviewDate: '26/10/2026' },
           { name: 'Fresh Mushrooms, Garlic, Basil, Olive Oil', supplier: 'Tesco / Lidl', contains: 'None of the 14 allergens', mayContain: 'Checked on retail pack arrival', reviewDate: '26/10/2026' }
         ],
@@ -2754,8 +2754,14 @@
           return savedList;
         })(),
         gallery: Array.isArray(saved.gallery) ? saved.gallery : def.gallery,
-        menuAllergens: Array.isArray(saved.menuAllergens) ? saved.menuAllergens : def.menuAllergens,
-        ingredientRegister: Array.isArray(saved.ingredientRegister) ? saved.ingredientRegister : def.ingredientRegister,
+        menuAllergens: (Array.isArray(saved.menuAllergens) ? saved.menuAllergens : def.menuAllergens).map(item => ({
+          ...item,
+          notes: (item.notes || '').replace(/Narello\s*(Cubed)?\s*Mozzarella/gi, 'Mozzarella').replace(/Narello\s*mozzarella/gi, 'Mozzarella')
+        })),
+        ingredientRegister: (Array.isArray(saved.ingredientRegister) ? saved.ingredientRegister : def.ingredientRegister).map(ing => ({
+          ...ing,
+          name: (ing.name || '').replace(/Narello\s*(Cubed)?\s*Mozzarella/gi, 'Mozzarella').replace(/Narello\s*mozzarella/gi, 'Mozzarella').trim()
+        })),
         cleaningSchedule: (Array.isArray(saved.cleaningSchedule) ? saved.cleaningSchedule : def.cleaningSchedule).map(s => ({
           ...s,
           product: (s.product || '').replace(/Janex/gi, 'Jantex'),
@@ -4848,7 +4854,7 @@
         `Edit Ingredient Allergen Evidence`,
         `<div class="form-group">
            <label class="form-label">Ingredient Name</label>
-           <input type="text" id="ing-edit-name" class="form-control" value="${ing.name}" placeholder="e.g. Narello Cubed Mozzarella">
+           <input type="text" id="ing-edit-name" class="form-control" value="${ing.name}" placeholder="e.g. Mozzarella">
          </div>
          <div class="form-group">
            <label class="form-label">Supplier</label>
