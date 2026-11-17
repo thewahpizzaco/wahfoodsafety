@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#5e72e4"/>
-      <stop offset="100%" stop-color="#324cdd"/>
+      <stop offset="0%" stop-color="#5e18eb"/>
+      <stop offset="100%" stop-color="#400db0"/>
     </linearGradient>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#172b4d" flood-opacity="0.35"/>
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#240a5e" flood-opacity="0.35"/>
     </filter>
   </defs>
   <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>

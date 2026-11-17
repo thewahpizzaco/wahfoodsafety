@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <meta name="theme-color" content="#5e72e4">
+  <meta name="theme-color" content="#5e18eb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Wah Safety">
@@ -26,14 +26,14 @@
 
   <style>
     :root {
-      --argon-primary: #5e72e4;
-      --argon-primary-hover: #324cdd;
+      --argon-primary: #5e18eb;
+      --argon-primary-hover: #4a0dc2;
       --argon-secondary: #f4f5f7;
       --argon-success: #2dce89;
       --argon-info: #11cdef;
       --argon-warning: #fb6340;
       --argon-danger: #f5365c;
-      --argon-default: #172b4d;
+      --argon-default: #240a5e;
       --argon-bg: #f4f6fc;
       --argon-card-bg: #ffffff;
       --argon-text: #525f7f;
@@ -61,7 +61,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: linear-gradient(87deg, #172b4d 0, #1a174d 100%);
+      background: linear-gradient(87deg, #240a5e 0, #16043d 100%);
       z-index: 5000;
       align-items: center;
       justify-content: center;
@@ -79,7 +79,7 @@
     /* Read-Only EHO Banner */
     #eho-banner {
       display: none;
-      background: linear-gradient(87deg, #172b4d 0, #1a174d 100%);
+      background: linear-gradient(87deg, #240a5e 0, #16043d 100%);
       color: #fff;
       padding: 12px 20px;
       position: sticky;
@@ -104,7 +104,7 @@
 
     /* Streamlined Argon Hero Header (Top 4 Stat Boxes Removed) */
     .argon-header {
-      background: linear-gradient(87deg, #5e72e4 0, #825ee4 100%);
+      background: linear-gradient(87deg, #5e18eb 0, #7b35f2 100%);
       padding: 0.65rem 1.15rem;
       color: #fff;
       box-shadow: 0 2px 8px rgba(23,43,77,0.12);
@@ -247,7 +247,7 @@
     .mob-nav-btn .mob-icon { font-size: 1.2rem; line-height: 1; }
     .mob-nav-btn.active {
       color: var(--argon-primary);
-      background: rgba(94, 114, 228, 0.1);
+      background: rgba(94, 24, 235, 0.1);
     }
 
     @media (max-width: 768px) {
@@ -361,7 +361,7 @@
       font-family: inherit;
     }
     .day-pill.active {
-      background: rgba(94, 114, 228, 0.12);
+      background: rgba(94, 24, 235, 0.12);
       border-color: var(--argon-primary);
       color: var(--argon-primary);
     }
@@ -571,7 +571,7 @@
     .badge-warning { background: rgba(251, 99, 64, 0.15); color: #d64527; }
     .badge-danger { background: rgba(245, 54, 92, 0.15); color: #d9254b; }
     .badge-info { background: rgba(17, 205, 239, 0.15); color: #0b8fa6; }
-    .badge-primary { background: rgba(94, 114, 228, 0.15); color: #5e72e4; }
+    .badge-primary { background: rgba(94, 24, 235, 0.15); color: #5e18eb; }
 
     /* Pending TO CONFIRM Checklist Banner */
     .confirm-checklist-card {
@@ -706,7 +706,7 @@
     .audit-details-accordion summary {
       cursor: pointer;
       font-weight: 600;
-      color: #5e72e4;
+      color: #5e18eb;
       user-select: none;
       outline: none;
     }
@@ -733,7 +733,7 @@
       border-radius: 4px;
       font-size: 0.8rem;
       background: #f8f9fe;
-      border-left: 3px solid #5e72e4;
+      border-left: 3px solid #5e18eb;
     }
     .audit-alert-box {
       margin: 0.5rem 0;
@@ -1049,8 +1049,8 @@
           </div>
 
           <!-- MORNING QUICK ACTION BANNER -->
-          <div id="morning-quick-bar" style="display:flex; justify-content:space-between; align-items:center; background:#ebf8ff; border:1px solid #bee3f8; padding:0.65rem 0.9rem; border-radius:var(--argon-radius); margin-bottom:1rem; flex-wrap:wrap; gap:8px;">
-            <div style="font-size:0.82rem; color:#2b6cb0;" id="morning-focus-text">
+          <div id="morning-quick-bar" style="display:flex; justify-content:space-between; align-items:center; background:#f6f0ff; border:1px solid #e0caff; padding:0.65rem 0.9rem; border-radius:var(--argon-radius); margin-bottom:1rem; flex-wrap:wrap; gap:8px;">
+            <div style="font-size:0.82rem; color:#5e18eb;" id="morning-focus-text">
               <strong>☀️ Open & Prep Focus:</strong> Hygiene, 48h fitness, ambient dough & domestic kitchen separation.
             </div>
             <button type="button" class="btn btn-sm btn-info" onclick="quickFillOpeningCheck()">⚡ Fast Open & Prep Pass</button>
@@ -2312,9 +2312,9 @@
         start_url: "./index.html",
         display: "standalone",
         background_color: "#f4f6fc",
-        theme_color: "#5e72e4",
+        theme_color: "#5e18eb",
         icons: [{
-          src: "data:image/svg+xml;base64," + utf8ToBase64('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="36" fill="#5e72e4"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="100">🍕</text></svg>'),
+          src: "data:image/svg+xml;base64," + utf8ToBase64('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="36" fill="#5e18eb"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-size="100">🍕</text></svg>'),
           sizes: "192x192",
           type: "image/svg+xml"
         }]
@@ -2684,7 +2684,7 @@
             category: 'Ovens / Cooking Equipment (Gozney Arc)',
             caption: 'Outdoor Gozney Arc LPG pizza oven operating at 400°C+ with LPG cylinder kept safely outside.',
             timestamp: '26/10/2026, 08:32:00',
-            imageUrl: createPlaceholderDiagramSVG('Gozney Arc LPG Oven (>400°C)', 'Soapy Water Connection Check • Fire Blanket Ready', '#5e72e4')
+            imageUrl: createPlaceholderDiagramSVG('Gozney Arc LPG Oven (>400°C)', 'Soapy Water Connection Check • Fire Blanket Ready', '#5e18eb')
           },
           {
             id: 'GAL-03',
@@ -4235,7 +4235,7 @@
             <summary>▾ View Complete Verification Checklist (Open & Prep, Service & Close)</summary>
             <div class="audit-grid">
               <div class="audit-grid-item">
-                <div style="font-weight:600; color:#2b6cb0; margin-bottom:4px;">☀️ Open & Prep Checks</div>
+                <div style="font-weight:600; color:#5e18eb; margin-bottom:4px;">☀️ Open & Prep Checks</div>
                 <div><strong>Fit to Work (48h):</strong> ${escapeHtml(d.fitToWork || 'N/A')}</div>
                 <div><strong>Domestic Kitchen Sep:</strong> ${escapeHtml(d.domesticSeparation || 'N/A')}</div>
                 <div><strong>Two-Stage Clean:</strong> ${escapeHtml(d.twoStageClean || 'N/A')}</div>
