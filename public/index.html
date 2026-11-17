@@ -1159,14 +1159,10 @@
               <h4>🔥 3. Service Temperatures, LPG Leak Test & Acrylamide Control</h4>
               <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllCheckboxesInContainer('daily-trading-fields', true)">☑️ Tick Section</button>
             </div>
-            <div class="form-grid" style="margin-bottom:0.75rem;">
+            <div class="form-grid" style="max-width:340px; margin-bottom:0.75rem;">
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label" for="daily-fridge-temp">Opening Domestic Fridge Temp (°C — Target ≤ 4°C)</label>
                 <input type="number" step="0.1" id="daily-fridge-temp" class="form-control" placeholder="e.g. 3.6">
-              </div>
-              <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label" for="daily-reheat-temp">Reheated Toppings Probe (°C — Target ≥ 75°C core temp for ≥ 30s)</label>
-                <input type="number" step="0.1" id="daily-reheat-temp" class="form-control" placeholder="e.g. 78.5">
               </div>
             </div>
             <div class="check-grid">
@@ -1185,14 +1181,14 @@
 
               <label class="check-card">
                 <input type="checkbox" id="chk-oven-acrylamide" onchange="syncCheckCardStyle(this)"
-                  data-pass="Pass (>400°C IR + Active peel turning to prevent excess black charring)"
+                  data-pass="Pass (>400°C IR bake + bubbling hot toppings ≥75°C + active peel turning)"
                   data-fail="Action Taken — Burnt base discarded">
                 <div class="check-card-content">
                   <div class="check-card-title">
-                    <span>Gozney Arc >400°C & Acrylamide Control</span>
+                    <span>Gozney Arc >400°C Bake, Piping Hot Toppings & Acrylamide Control</span>
                     <span class="check-status-pill">UNCHECKED / ACTION</span>
                   </div>
-                  <div class="check-card-sub">Stone >400°C (IR checked); pizzas actively turned with peel to prevent black charring.</div>
+                  <div class="check-card-sub">Stone >400°C (IR verified); pizza baked until toppings are bubbling/piping hot (≥75°C visual check); active peel turning prevents excess charring.</div>
                 </div>
               </label>
 
@@ -1735,7 +1731,7 @@
             </div>
             <div class="haccp-step-box">
               <h4>5. Baking & Reheating</h4>
-              <div><strong>CCP:</strong> Gozney Arc LPG ovens run at <strong>> 400°C</strong> (IR checked). Pre-cooked toppings reheated to <strong>≥ 75°C</strong> (core probe verified for ≥ 30 seconds).<br><strong>Acrylamide Control:</strong> Active turning with turning peel; heavily charred bases discarded.</div>
+              <div><strong>CCP:</strong> Gozney Arc LPG ovens run at <strong>> 400°C</strong> (IR verified). Pre-cooked toppings reheated to <strong>≥ 75°C</strong> (visual check: cheese melted & toppings bubbling hot throughout during 60–90s bake; core probe validation during batch prep).<br><strong>Acrylamide Control:</strong> Active turning with turning peel; heavily charred bases discarded.</div>
             </div>
             <div class="haccp-step-box">
               <h4>6. Boxed Pickup Service</h4>
@@ -3603,8 +3599,6 @@
       if (amb && !amb.value) amb.value = '20.0';
       const fr = document.getElementById('daily-fridge-temp');
       if (fr && !fr.value && (dayType === 'Both' || dayType === 'Trading')) fr.value = '3.6';
-      const rh = document.getElementById('daily-reheat-temp');
-      if (rh && !rh.value && (dayType === 'Both' || dayType === 'Trading')) rh.value = '78.5';
       showToast('☀️ Open & prep checks pre-filled.');
     }
 
@@ -3939,7 +3933,7 @@
           openingFridgeTemp: (dayType === 'Both' || dayType === 'Trading') ? (document.getElementById('daily-fridge-temp').value ? document.getElementById('daily-fridge-temp').value + '°C' : 'Not recorded') : 'N/A',
           lpgCheck: (dayType === 'Both' || dayType === 'Trading') ? readCheckValue('chk-lpg-leak') : 'N/A',
           ovenAndAcrylamide: (dayType === 'Both' || dayType === 'Trading') ? readCheckValue('chk-oven-acrylamide') : 'N/A',
-          reheatTemp: (dayType === 'Both' || dayType === 'Trading') ? (document.getElementById('daily-reheat-temp').value ? document.getElementById('daily-reheat-temp').value + '°C' : 'Not recorded') : 'N/A',
+          reheatTemp: (document.getElementById('daily-reheat-temp')?.value) ? document.getElementById('daily-reheat-temp').value + '°C' : 'N/A',
           pestWaste: (dayType === 'Both' || dayType === 'Trading') ? readCheckValue('chk-pest-fire') : 'N/A',
           allergenSignposting: (dayType === 'Both' || dayType === 'Trading') ? readCheckValue('chk-allergen-sign') : 'N/A',
           closingFridgeTemp: (dayType !== 'Closed') ? (document.getElementById('daily-closing-fridge').value ? document.getElementById('daily-closing-fridge').value + '°C' : 'Not recorded') : 'N/A',
@@ -4058,7 +4052,7 @@
           toggleAllCheckboxesInContainer('sub-daily', false);
           document.getElementById('daily-ambient-temp').value = '';
           document.getElementById('daily-fridge-temp').value = '';
-          document.getElementById('daily-reheat-temp').value = '';
+          if (document.getElementById('daily-reheat-temp')) document.getElementById('daily-reheat-temp').value = '';
           document.getElementById('daily-closing-fridge').value = '';
           document.getElementById('daily-problems').value = '';
           document.getElementById('daily-corrective').value = '';
