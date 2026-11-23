@@ -1056,7 +1056,7 @@
             <span class="sub-desc">Action, Recall & Issue</span>
           </div>
         </button>
-        <button class="sub-btn" id="subbtn-sub-weekly" onclick="switchSubTabById('sub-weekly')">
+        <button class="sub-btn" id="subbtn-sub-weekly" onclick="openReviewSubTab()">
           <div class="sub-icon">📅</div>
           <div>
             <span>Weekly / 4-Wk Review</span>
@@ -1614,16 +1614,21 @@
       <!-- 1F: Weekly OR Four-Week Review (With Fast Checkboxes) -->
       <div id="sub-weekly" class="sub-pane card">
         <div class="card-header">
-          <h3>📅 Weekly or Four-Week Manager Review & Archive Sign-Off</h3>
-          <span class="badge badge-success">Moves current unreviewed records into Dated Archive</span>
+          <div>
+            <h3 id="wk-form-title">📅 Weekly or Four-Week Manager Review & Archive Sign-Off</h3>
+            <span class="badge badge-success" id="wk-form-badge">Moves current unreviewed records into Dated Archive</span>
+          </div>
         </div>
         <div class="card-body">
+          <!-- DYNAMIC REVIEW STATUS & GUIDANCE BANNER -->
+          <div id="wk-guidance-banner" style="margin-bottom:1.25rem;"></div>
+
           <div class="form-grid" style="max-width:600px;">
             <div class="form-group">
               <label class="form-label" for="wk-period-type">1. Review Period Type</label>
-              <select id="wk-period-type" class="form-control">
-                <option value="Weekly Review">Weekly Review</option>
-                <option value="Four-Week Review">Four-Week Review</option>
+              <select id="wk-period-type" class="form-control" onchange="updateReviewFormGuidance()">
+                <option value="Weekly Review">📅 Weekly Review (Every 7 Days)</option>
+                <option value="Four-Week Review">📋 Four-Week Manager Review (Every 28 Days)</option>
               </select>
             </div>
             <div class="form-group">
@@ -3672,6 +3677,9 @@
       const btn = document.getElementById('subbtn-' + subId);
       if (pane) pane.classList.add('active');
       if (btn) btn.classList.add('active');
+      if (subId === 'sub-weekly') {
+        updateReviewFormGuidance();
+      }
     }
 
     function applyShiftAndViewVisibility() {
@@ -3844,13 +3852,10 @@
     /********************************************************************
      * 4B. DYNAMIC ACTION REMINDER SYSTEM (FRONT PAGE TO-CONFIRM ITEMS)
      ********************************************************************/
-    function getDaysSinceLatestRecord(recordType) {
-      const matching = (appState.records || []).filter(r => r.type === recordType && r.dateISO);
-      if (!matching.length) return null;
-      matching.sort((a, b) => (b.dateISO > a.dateISO ? 1 : -1));
-      const latestISO = matching[0].dateISO;
+    function getDaysSinceDateISO(dateISO) {
+      if (!dateISO) return null;
       try {
-        const recordDate = new Date(latestISO + 'T00:00:00');
+        const recordDate = new Date(dateISO + 'T00:00:00');
         const today = new Date(getUKDateISO() + 'T00:00:00');
         const diffTime = today - recordDate;
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -3858,6 +3863,209 @@
       } catch (e) {
         return null;
       }
+    }
+
+    function getDaysSinceLatestRecord(recordType) {
+      const matching = (appState.records || []).filter(r => r.type === recordType && r.dateISO);
+      if (!matching.length) return null;
+      matching.sort((a, b) => (b.dateISO > a.dateISO ? 1 : -1));
+      return getDaysSinceDateISO(matching[0].dateISO);
+    }
+
+    // Precise Weekly vs 4-Week Review Cycle Calculator
+    function getReviewStatus() {
+      const allReviews = (appState.records || [])
+        .filter(r => r.type === 'Weekly Review' && r.dateISO)
+        .sort((a, b) => (b.dateISO > a.dateISO ? 1 : -1));
+
+      const latestAny = allReviews[0] || null;
+      const latestFourWeek = allReviews.find(r => r.details && r.details.periodType === 'Four-Week Review') || null;
+      const latestWeekly = allReviews.find(r => !r.details || r.details.periodType === 'Weekly Review') || null;
+
+      const anyDays = latestAny ? getDaysSinceDateISO(latestAny.dateISO) : null;
+      const fourWeekDays = latestFourWeek ? getDaysSinceDateISO(latestFourWeek.dateISO) : null;
+      const weeklyDays = latestWeekly ? getDaysSinceDateISO(latestWeekly.dateISO) : null;
+
+      // Weekly reviews signed strictly after the latest 4-Week Review
+      const weeklyReviewsAfterFourWeek = allReviews.filter(r => {
+        if (latestFourWeek && r.dateISO <= latestFourWeek.dateISO) return false;
+        return (!r.details || r.details.periodType === 'Weekly Review');
+      });
+      const weeklyCount = weeklyReviewsAfterFourWeek.length;
+
+      // Current week in the 4-week cycle (1, 2, 3, or 4)
+      const cycleWeek = Math.min(4, (weeklyCount % 4) + 1);
+
+      // Determine 4-Week Review Due status
+      let isFourWeekDue = false;
+      let isFourWeekSoon = false;
+
+      if (fourWeekDays === null) {
+        if (anyDays === null || anyDays >= 28 || weeklyCount >= 3) {
+          isFourWeekDue = true;
+        } else if (anyDays >= 21) {
+          isFourWeekSoon = true;
+        }
+      } else {
+        if (fourWeekDays >= 28 || (weeklyCount >= 3 && anyDays !== null && anyDays >= 7)) {
+          isFourWeekDue = true;
+        } else if (fourWeekDays >= 21) {
+          isFourWeekSoon = true;
+        }
+      }
+
+      // Determine Weekly Review Due status
+      let isWeeklyDue = false;
+      let isWeeklySoon = false;
+
+      if (!isFourWeekDue) {
+        if (anyDays === null || anyDays >= 7) {
+          isWeeklyDue = true;
+        } else if (anyDays >= 5) {
+          isWeeklySoon = true;
+        }
+      }
+
+      const recommendedReview = isFourWeekDue ? 'Four-Week Review' : 'Weekly Review';
+
+      return {
+        allReviews,
+        latestAny,
+        latestFourWeek,
+        latestWeekly,
+        anyDays,
+        fourWeekDays,
+        weeklyDays,
+        weeklyCount,
+        cycleWeek,
+        isFourWeekDue,
+        isFourWeekSoon,
+        isWeeklyDue,
+        isWeeklySoon,
+        recommendedReview
+      };
+    }
+
+    function openReviewSubTab(preferredType) {
+      switchMainTab('today');
+      switchSubTabById('sub-weekly');
+      const status = getReviewStatus();
+      const targetType = preferredType || status.recommendedReview;
+      const sel = document.getElementById('wk-period-type');
+      if (sel) {
+        sel.value = targetType;
+      }
+      updateReviewFormGuidance();
+      const pane = document.getElementById('sub-weekly');
+      if (pane) {
+        pane.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function setReviewTypeSelect(type) {
+      const sel = document.getElementById('wk-period-type');
+      if (sel) {
+        sel.value = type;
+      }
+      updateReviewFormGuidance();
+    }
+
+    function updateReviewFormGuidance() {
+      const sel = document.getElementById('wk-period-type');
+      const banner = document.getElementById('wk-guidance-banner');
+      const labelInput = document.getElementById('wk-label');
+      const gasHoseCard = document.getElementById('chk-wk-gas-hose')?.closest('.check-card');
+      const probeCard = document.getElementById('chk-wk-probe')?.closest('.check-card');
+      if (!sel || !banner) return;
+
+      const currentType = sel.value; // 'Weekly Review' or 'Four-Week Review'
+      const isFourWeek = (currentType === 'Four-Week Review');
+      const status = getReviewStatus();
+
+      const todayUK = formatISOToUKDate(getUKDateISO());
+      const defaultLabel = isFourWeek 
+        ? `4-Week Review Ending ${todayUK}` 
+        : `Week Ending ${todayUK} (Week ${status.cycleWeek})`;
+      
+      if (labelInput) {
+        labelInput.placeholder = defaultLabel;
+        if (!labelInput.value || labelInput.value.startsWith('Week Ending') || labelInput.value.startsWith('4-Week Review Ending')) {
+          labelInput.value = defaultLabel;
+        }
+      }
+
+      // Highlight 4-Week specific cards
+      if (gasHoseCard) {
+        if (isFourWeek) {
+          gasHoseCard.style.border = '2px solid #fb6340';
+          gasHoseCard.style.background = '#fffaf0';
+        } else {
+          gasHoseCard.style.border = '';
+          gasHoseCard.style.background = '';
+        }
+      }
+      if (probeCard) {
+        if (isFourWeek) {
+          probeCard.style.border = '2px solid #5e72e4';
+          probeCard.style.background = '#f8f9fe';
+        } else {
+          probeCard.style.border = '';
+          probeCard.style.background = '';
+        }
+      }
+
+      let urgencyBadge = '';
+      if (isFourWeek) {
+        if (status.isFourWeekDue) {
+          urgencyBadge = `<span class="badge badge-danger" style="margin-left:8px;">⚠️ 4-WEEK AUDIT DUE NOW</span>`;
+        } else {
+          const daysRem = Math.max(0, 28 - (status.fourWeekDays !== null ? status.fourWeekDays : (status.anyDays || 0)));
+          urgencyBadge = `<span class="badge badge-success" style="margin-left:8px;">✓ 4-Week Audit In-Date (${daysRem}d remaining)</span>`;
+        }
+      } else {
+        if (status.isWeeklyDue) {
+          urgencyBadge = `<span class="badge badge-danger" style="margin-left:8px;">⚠️ WEEKLY REVIEW DUE (Wk ${status.cycleWeek} of 4)</span>`;
+        } else {
+          const daysRem = Math.max(0, 7 - (status.anyDays || 0));
+          urgencyBadge = `<span class="badge badge-success" style="margin-left:8px;">✓ Weekly Review In-Date (${daysRem}d remaining)</span>`;
+        }
+      }
+
+      banner.innerHTML = `
+        <div style="display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-sm ${!isFourWeek ? 'btn-primary' : 'btn-secondary'}" onclick="setReviewTypeSelect('Weekly Review')">
+            📅 Switch to Weekly Review (7 Days)
+          </button>
+          <button type="button" class="btn btn-sm ${isFourWeek ? 'btn-primary' : 'btn-secondary'}" onclick="setReviewTypeSelect('Four-Week Review')">
+            📋 Switch to 4-Week Manager Review (28 Days)
+          </button>
+        </div>
+        <div style="border-radius:var(--argon-radius); padding:1rem; border:1px solid ${isFourWeek ? '#fed7d7; background:#fffaf0;' : '#bee3f8; background:#f0f9ff;'}">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:0.4rem;">
+            <div style="font-weight:700; color:var(--argon-heading); font-size:0.95rem;">
+              ${isFourWeek ? '📋 4-Week Comprehensive SFBB Manager Review' : `📅 Weekly SFBB Diary Review (Cycle: Week ${status.cycleWeek} of 4)`}
+            </div>
+            <div>${urgencyBadge}</div>
+          </div>
+          <div style="font-size:0.82rem; color:var(--argon-text); line-height:1.45;">
+            ${isFourWeek ? `
+              <strong>Why this review?</strong> Under Food Standards Agency (SFBB) & Cardiff SRS regulations, a 4-week manager review is required every 28 days to audit the entire diary system.
+              <ul style="margin:0.4rem 0 0.2rem 1.2rem; padding:0;">
+                <li><strong>Safe Methods Audit:</strong> Verify cross-contamination, cleaning, chilling and cooking methods remain strictly followed.</li>
+                <li><strong>LPG Gas Hose Physical Inspection:</strong> Inspect high-pressure flexible hose for wear, hardening, or cracking; confirm within 5-year replacement date (BS 3212 / EN 16436).</li>
+                <li><strong>Probe & Supplier Check:</strong> Verify monthly probe verification has passed and all supplier ingredient changes are updated in the Allergen Matrix.</li>
+              </ul>
+            ` : `
+              <strong>Why this review?</strong> Under SFBB, daily logs must be checked and signed off every 7 days.
+              <ul style="margin:0.4rem 0 0.2rem 1.2rem; padding:0;">
+                <li><strong>Routine Sign-off:</strong> Confirms all trading and prep sessions for the past week are signed with zero unaddressed temperature alarms (>4°C).</li>
+                <li><strong>Non-Trading Days:</strong> Confirms non-trading days are accounted for so inspectors see an uninterrupted timeline.</li>
+                <li><strong>Archival:</strong> Covered records will be bundled into this dated week archive to keep your active log clean.</li>
+              </ul>
+            `}
+          </div>
+        </div>
+      `;
     }
 
     function renderActionReminders() {
@@ -3872,10 +4080,8 @@
       const probePending = (probeDays === null || probeDays >= 30);
       const probeSoon = (probeDays !== null && probeDays >= 23 && probeDays < 30);
 
-      // 2. Check Periodic 4-Week / Monthly Review (Every 28 days)
-      const reviewDays = getDaysSinceLatestRecord('Weekly Review');
-      const reviewPending = (reviewDays === null || reviewDays >= 28);
-      const reviewSoon = (reviewDays !== null && reviewDays >= 21 && reviewDays < 28);
+      // 2. Check Periodic Weekly & 4-Week Reviews
+      const reviewStatus = getReviewStatus();
 
       // Update Sub-Button Badges on the Launcher Grid
       const probeBtn = document.getElementById('subbtn-sub-probe');
@@ -3896,12 +4102,18 @@
       if (reviewBtn) {
         const subDesc = reviewBtn.querySelector('.sub-desc');
         if (subDesc) {
-          if (reviewPending) {
-            subDesc.innerHTML = `<span style="color:#e53e3e; font-weight:700;">⚠️ Due Now (${reviewDays === null ? 'Never' : reviewDays + 'd ago'})</span>`;
-          } else if (reviewSoon) {
-            subDesc.innerHTML = `<span style="color:#dd6b20; font-weight:600;">⏳ Due in ${28 - reviewDays}d</span>`;
+          if (reviewStatus.isFourWeekDue) {
+            subDesc.innerHTML = `<span style="color:#e53e3e; font-weight:700;">⚠️ 4-Week Due (${reviewStatus.fourWeekDays === null ? 'Overdue' : reviewStatus.fourWeekDays + 'd ago'})</span>`;
+          } else if (reviewStatus.isWeeklyDue) {
+            subDesc.innerHTML = `<span style="color:#e53e3e; font-weight:700;">⚠️ Weekly Due (Wk ${reviewStatus.cycleWeek} • ${reviewStatus.anyDays === null ? 'Due' : reviewStatus.anyDays + 'd ago'})</span>`;
+          } else if (reviewStatus.isFourWeekSoon) {
+            const rem = Math.max(0, 28 - (reviewStatus.fourWeekDays !== null ? reviewStatus.fourWeekDays : (reviewStatus.anyDays || 0)));
+            subDesc.innerHTML = `<span style="color:#dd6b20; font-weight:600;">⏳ 4-Wk Due in ${rem}d</span>`;
+          } else if (reviewStatus.isWeeklySoon) {
+            const rem = Math.max(0, 7 - (reviewStatus.anyDays || 0));
+            subDesc.innerHTML = `<span style="color:#dd6b20; font-weight:600;">⏳ Weekly Due in ${rem}d (Wk ${reviewStatus.cycleWeek})</span>`;
           } else {
-            subDesc.innerHTML = `<span style="color:#38a169;">✓ Valid (${reviewDays}d ago)</span>`;
+            subDesc.innerHTML = `<span style="color:#38a169;">✓ Up to Date (Wk ${reviewStatus.cycleWeek} of 4)</span>`;
           }
         }
       }
@@ -3925,7 +4137,7 @@
 
       const reheatConfirmed = appState.businessProfile.reheatTargetConfirmed === true;
 
-      // Group actions: High-priority periodic operational audits first!
+      // Group actions: Differentiate Weekly vs 4-Week Reviews clearly!
       const periodicActions = [
         {
           id: 'remind-probe',
@@ -3940,16 +4152,30 @@
           actionBtn: `<button class="btn btn-sm ${probePending ? 'btn-danger' : 'btn-secondary'}" onclick="switchSubTabById('sub-probe')">Calibrate Probe →</button>`
         },
         {
-          id: 'remind-review',
+          id: 'remind-weekly-review',
           isPeriodic: true,
-          title: '📅 4-Week SFBB Manager Review & Gas Hose Audit',
-          isPending: reviewPending,
-          isSoon: reviewSoon,
-          pendingDesc: reviewDays === null
-            ? 'No 4-week review signed. Monthly audit required under Cardiff SRS / SFBB standards.'
-            : `Last signed ${reviewDays} days ago (Overdue by ${reviewDays - 28} days). Review logs & verify 5-year gas hose condition.`,
-          resolvedDesc: `4-Week Review Current (Signed ${reviewDays} days ago — Next due in ${28 - reviewDays} days).`,
-          actionBtn: `<button class="btn btn-sm ${reviewPending ? 'btn-danger' : 'btn-secondary'}" onclick="switchSubTabById('sub-weekly')">Open 4-Week Review →</button>`
+          title: `📅 Weekly SFBB Diary Review (Every 7 Days — Cycle: Week ${reviewStatus.cycleWeek} of 4)`,
+          isPending: reviewStatus.isWeeklyDue,
+          isSoon: reviewStatus.isWeeklySoon,
+          pendingDesc: reviewStatus.anyDays === null
+            ? 'No review record found. Weekly diary sign-off required every 7 days under SFBB.'
+            : (reviewStatus.isFourWeekDue 
+                ? `Rolled into the 4-Week Manager Audit (${reviewStatus.anyDays} days since last review).`
+                : `Last review signed ${reviewStatus.anyDays} days ago (Due every 7 days). Review daily sheets and close the week.`),
+          resolvedDesc: `Weekly Review Current (Cycle: Week ${reviewStatus.cycleWeek} of 4 — Next due in ${Math.max(0, 7 - (reviewStatus.anyDays || 0))} days).`,
+          actionBtn: `<button class="btn btn-sm ${reviewStatus.isWeeklyDue ? 'btn-danger' : 'btn-secondary'}" onclick="openReviewSubTab('Weekly Review')">Sign Weekly Review (Wk ${reviewStatus.cycleWeek}) →</button>`
+        },
+        {
+          id: 'remind-fourweek-review',
+          isPeriodic: true,
+          title: '📋 4-Week SFBB Manager Review & Gas Hose Audit (Every 28 Days)',
+          isPending: reviewStatus.isFourWeekDue,
+          isSoon: reviewStatus.isFourWeekSoon,
+          pendingDesc: reviewStatus.fourWeekDays === null
+            ? (reviewStatus.anyDays === null ? 'No 4-week review found. Required every 28 days under Cardiff SRS / SFBB.' : `No 4-week manager review signed (${reviewStatus.anyDays} days since last review). Audit Safe Methods & 5-yr gas hose.`)
+            : `Last 4-week review signed ${reviewStatus.fourWeekDays} days ago (Overdue by ${reviewStatus.fourWeekDays - 28} days). Audit Safe Methods & 5-yr gas hose.`,
+          resolvedDesc: `4-Week Manager Audit Current (Signed ${reviewStatus.fourWeekDays !== null ? reviewStatus.fourWeekDays : (reviewStatus.anyDays || 0)} days ago — Next due in ${Math.max(0, 28 - (reviewStatus.fourWeekDays !== null ? reviewStatus.fourWeekDays : (reviewStatus.anyDays || 0)))} days).`,
+          actionBtn: `<button class="btn btn-sm ${reviewStatus.isFourWeekDue ? 'btn-danger' : 'btn-secondary'}" onclick="openReviewSubTab('Four-Week Review')">Sign 4-Week Review →</button>`
         }
       ];
 
@@ -4083,6 +4309,7 @@
     function refreshAllUI() {
       checkEhoLinkExpirations();
       renderActionReminders();
+      updateReviewFormGuidance();
       renderRecordsTab();
       renderDocumentsAndGallery();
       renderAllergensTab();
@@ -4203,11 +4430,14 @@
           followUp: document.getElementById('prob-followup').value.trim() || 'Monitored'
         };
       } else if (recordType === 'Weekly Review') {
-        const defaultWeekLabel = `Week Ending ${formatISOToUKDate(dateISO)}`;
+        const periodTypeVal = document.getElementById('wk-period-type').value;
+        const defaultWeekLabel = periodTypeVal === 'Four-Week Review'
+          ? `4-Week Review Ending ${formatISOToUKDate(dateISO)}`
+          : `Week Ending ${formatISOToUKDate(dateISO)}`;
         const userWeekLabel = document.getElementById('wk-label').value.trim();
         const activeWeekLabel = userWeekLabel || defaultWeekLabel;
         details = {
-          periodType: document.getElementById('wk-period-type').value,
+          periodType: periodTypeVal,
           weekLabel: activeWeekLabel,
           recordsReviewed: readCheckValue('chk-wk-reviewed'),
           missingDays: readCheckValue('chk-wk-missing'),
@@ -4295,6 +4525,7 @@
           toggleAllCheckboxesInContainer('sub-weekly', false);
           document.getElementById('wk-label').value = '';
           document.getElementById('wk-notes').value = '';
+          updateReviewFormGuidance();
         }
       };
     }
@@ -4538,11 +4769,12 @@
 
       // 5. WEEKLY / 4-WEEK REVIEW CARD
       if (type === 'Weekly Review') {
+        const isFourWeek = (d.periodType === 'Four-Week Review');
         return `
           <div class="audit-vitals-row">
-            <span class="audit-temp-pill neutral">📁 <strong>Audit Period:</strong> ${escapeHtml(d.weekLabel || '4-Week Period')}</span>
+            <span class="audit-temp-pill neutral">📁 <strong>${isFourWeek ? '4-Week Audit Period:' : 'Weekly Period:'}</strong> ${escapeHtml(d.weekLabel || (isFourWeek ? '4-Week Period' : 'Weekly Review'))}</span>
             <span class="audit-control-pill pass">✓ Logs Reviewed</span>
-            <span class="audit-control-pill pass">✓ Gas Hose Inspected (<5 Yrs)</span>
+            ${isFourWeek ? `<span class="audit-control-pill pass">✓ Gas Hose (<5 Yrs)</span>` : ''}
             <span class="audit-control-pill pass">✓ Probe Accuracy Checked</span>
           </div>
           <div class="audit-grid">
@@ -4552,7 +4784,7 @@
             </div>
             <div class="audit-grid-item">
               <div><strong>LPG Hose 5-Year Check:</strong> ${escapeHtml(d.lpgHoseConditionAndExpiry || 'Valid BS 3212/EN 16436, no cracks/perishing')}</div>
-              <div><strong>Monthly Probe Test:</strong> ${escapeHtml(d.probeEvidence || 'Ice/boiling verification passed')}</div>
+              <div><strong>Probe & Allergen Review:</strong> ${escapeHtml(d.probeEvidence || 'Probe verified; allergens current')}</div>
             </div>
           </div>
           ${d.notes ? `<div class="audit-note-box"><strong>Reviewer Sign-off:</strong> ${escapeHtml(d.notes)}</div>` : ''}
@@ -4651,7 +4883,13 @@
 
       let typeBadgeClass = 'badge-primary';
       let typeIcon = '☀️';
-      if (r.type === 'Weekly Review') { typeBadgeClass = 'badge-warning'; typeIcon = '📋'; }
+      let typeLabel = r.type;
+      if (r.type === 'Weekly Review') {
+        const isFourWeek = (r.details?.periodType === 'Four-Week Review');
+        typeBadgeClass = isFourWeek ? 'badge-warning' : 'badge-info';
+        typeIcon = isFourWeek ? '📋' : '📅';
+        typeLabel = isFourWeek ? '4-Week Manager Review' : 'Weekly SFBB Review';
+      }
       else if (r.type === 'Delivery') { typeBadgeClass = 'badge-info'; typeIcon = '📦'; }
       else if (r.type === 'Probe Verification') { typeBadgeClass = 'badge-success'; typeIcon = '🌡️'; }
       else if (r.type === 'Cooking/Cooling') { typeBadgeClass = 'badge-info'; typeIcon = '❄️'; }
@@ -4663,7 +4901,7 @@
         <div class="record-item">
           <div class="record-header">
             <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-              <span class="badge ${typeBadgeClass}">${typeIcon} ${escapeHtml(r.type)}</span>
+              <span class="badge ${typeBadgeClass}">${typeIcon} ${escapeHtml(typeLabel)}</span>
               <strong style="color:var(--argon-heading); font-size:0.95rem;">${escapeHtml(formatISOToUKDate(r.dateISO))}</strong>
               <span class="badge ${hasException ? 'badge-warning' : 'badge-success'}" style="font-size:0.68rem; padding:3px 7px;">
                 ${hasException ? '⚠️ Exception Logged' : '✓ SFBB Controls Passed'}
