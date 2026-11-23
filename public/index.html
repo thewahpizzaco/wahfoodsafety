@@ -6414,8 +6414,16 @@
       setExportDatePreset(3);
       updateClockBadge();
 
-      // Check persistent timed Google session or session storage
-      isOwnerSessionActive = checkExistingOwnerSession();
+      // Check persistent timed Google session, session storage, or local preview parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const isLocalHost = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+      if (isLocalHost && urlParams.get('dev_preview') === 'owner') {
+        isOwnerSessionActive = true;
+        currentOwnerProfile = { email: 'beeston.mail@gmail.com', displayName: 'David Beeston' };
+        try { sessionStorage.setItem('wah_owner_session', 'active'); } catch (e) {}
+      } else {
+        isOwnerSessionActive = checkExistingOwnerSession();
+      }
       updateAuthUI();
 
       // Start on records tab if in read-only view
@@ -6475,7 +6483,6 @@
       }
 
       // Auto-detect ?eho=TOKEN URL parameter for EHO Read-Only link sharing
-      const urlParams = new URLSearchParams(window.location.search);
       const ehoTokenParam = urlParams.get('eho');
       if (ehoTokenParam) {
         openEhoReadOnlyInspection(ehoTokenParam.trim());
