@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wah-safety-pwa-v8';
+const CACHE_NAME = 'wah-safety-pwa-v9';
 const REMINDER_META_CACHE = 'wah-reminder-meta';
 const REMINDER_META_URL = './__wah_reminder_state.json';
 
