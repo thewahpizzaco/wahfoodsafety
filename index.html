@@ -2124,6 +2124,50 @@
         </div>
       </div>
 
+      <!-- 0. ANDROID & BROWSER NOTIFICATION REMINDERS -->
+      <div class="card" id="notification-settings-card">
+        <div class="card-header">
+          <h3>🔔 Android & Browser Notification Reminders</h3>
+          <span class="badge badge-warning" id="notify-status-badge">Checking...</span>
+        </div>
+        <div class="card-body">
+          <p style="margin-top:0; font-size:0.85rem; color:var(--argon-text);">
+            Receive native Android &amp; browser alerts when your <strong>7-day Weekly Review</strong>, <strong>28-day 4-Week Manager Review</strong>, <strong>30-day Digital Probe Calibration</strong>, or <strong>Document / Setup Reviews</strong> become due.
+          </p>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:1rem;">
+            <button type="button" class="btn btn-primary" id="btn-enable-notifications" onclick="requestAndroidNotifications()">🔔 Enable Android Notifications</button>
+            <button type="button" class="btn btn-secondary" id="btn-test-notification" onclick="sendTestNotification()">🧪 Send Test Notification</button>
+          </div>
+          <div id="notify-permission-hint" style="font-size:0.78rem; color:var(--argon-muted); margin-bottom:1rem;"></div>
+
+          <div style="background:#f8f9fe; border:1px solid var(--argon-border); border-radius:var(--argon-radius); padding:0.85rem 1rem;">
+            <div style="font-weight:700; font-size:0.84rem; color:var(--argon-heading); margin-bottom:0.5rem;">Active Reminder Triggers:</div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:8px;">
+              <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; cursor:pointer;">
+                <input type="checkbox" id="pref-notify-weekly" onchange="saveNotifyPrefsFromUI()">
+                <span>📅 7-Day Weekly SFBB Review</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; cursor:pointer;">
+                <input type="checkbox" id="pref-notify-fourweek" onchange="saveNotifyPrefsFromUI()">
+                <span>📋 28-Day 4-Week Manager &amp; Gas Hose Audit</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; cursor:pointer;">
+                <input type="checkbox" id="pref-notify-probe" onchange="saveNotifyPrefsFromUI()">
+                <span>🌡️ 30-Day Monthly Digital Probe Calibration</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; cursor:pointer;">
+                <input type="checkbox" id="pref-notify-docs" onchange="saveNotifyPrefsFromUI()">
+                <span>📄 Document Expiries &amp; Pending Setup Items</span>
+              </label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:0.82rem; cursor:pointer;">
+                <input type="checkbox" id="pref-notify-duesoon" onchange="saveNotifyPrefsFromUI()">
+                <span>⏳ Advance "Due Soon" Heads-Up (1–7 days early)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 1. RECORDS EXPORT (PDF & CSV) -->
       <div class="card">
         <div class="card-header">
@@ -4262,7 +4306,7 @@
             <div>${act.actionBtn}</div>
           </div>
         `;
-      }).join('');
+      }).join('') + renderChecklistNotificationBanner();
     }
 
     function quickConfirmJantexStandard() {
@@ -4306,6 +4350,410 @@
       showToast(appState.businessProfile.reheatTargetConfirmed ? 'Topping reheat target confirmed as ≥ 75°C.' : 'Reheat target status reset to pending.');
     }
 
+    /********************************************************************
+     * 4C. ANDROID & PWA NOTIFICATION REMINDER ENGINE
+     ********************************************************************/
+    const NOTIFY_PREFS_KEY = 'wah_notify_prefs_v1';
+    const NOTIFY_HISTORY_KEY = 'wah_notify_history_v1';
+    const DEFAULT_NOTIFY_PREFS = {
+      weeklyReview: true,
+      fourWeekReview: true,
+      probeCalibration: true,
+      docsAndExpiry: true,
+      dueSoonWarnings: true
+    };
+
+    function getNotifyPrefs() {
+      try {
+        const raw = localStorage.getItem(NOTIFY_PREFS_KEY);
+        if (raw) return { ...DEFAULT_NOTIFY_PREFS, ...JSON.parse(raw) };
+      } catch (e) {}
+      return { ...DEFAULT_NOTIFY_PREFS };
+    }
+
+    function saveNotifyPrefs(prefs) {
+      try { localStorage.setItem(NOTIFY_PREFS_KEY, JSON.stringify(prefs)); } catch (e) {}
+      syncReminderSnapshotToSW();
+    }
+
+    function saveNotifyPrefsFromUI() {
+      const prefs = {
+        weeklyReview: !!document.getElementById('pref-notify-weekly')?.checked,
+        fourWeekReview: !!document.getElementById('pref-notify-fourweek')?.checked,
+        probeCalibration: !!document.getElementById('pref-notify-probe')?.checked,
+        docsAndExpiry: !!document.getElementById('pref-notify-docs')?.checked,
+        dueSoonWarnings: !!document.getElementById('pref-notify-duesoon')?.checked
+      };
+      saveNotifyPrefs(prefs);
+      showToast('Notification reminder preferences saved.');
+    }
+
+    function getLastNotifiedMap() {
+      try {
+        const raw = localStorage.getItem(NOTIFY_HISTORY_KEY);
+        if (raw) return JSON.parse(raw) || {};
+      } catch (e) {}
+      return {};
+    }
+
+    function saveLastNotifiedMap(map) {
+      try { localStorage.setItem(NOTIFY_HISTORY_KEY, JSON.stringify(map)); } catch (e) {}
+    }
+
+    function getPendingDocAlerts() {
+      const alerts = [];
+      const docs = (appState.documents || []).filter(d => !d.archived);
+      const now = new Date();
+      const monthNames = {
+        jan: 0, january: 0, feb: 1, february: 1, mar: 2, march: 2, apr: 3, april: 3,
+        may: 4, jun: 5, june: 5, jul: 6, july: 6, aug: 7, august: 7, sep: 8, sept: 8,
+        september: 8, oct: 9, october: 9, nov: 10, november: 10, dec: 11, december: 11
+      };
+
+      docs.forEach(d => {
+        const exp = (d.expiry || '').trim();
+        if (!exp) return;
+        if (exp.toUpperCase().includes('TO CONFIRM')) {
+          alerts.push(`${d.title} (Awaiting confirmation/upload)`);
+          return;
+        }
+        // Check explicit DD/MM/YYYY or YYYY-MM-DD dates in expiry text
+        const ukMatch = exp.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+        const isoMatch = exp.match(/(\d{4})-(\d{2})-(\d{2})/);
+        const monYrMatch = exp.match(/(?:Review|Due|Expires?)[:\s]+([A-Za-z]+)\s+(\d{4})/i);
+        let targetDate = null;
+
+        if (isoMatch) {
+          targetDate = new Date(`${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}T00:00:00`);
+        } else if (ukMatch) {
+          targetDate = new Date(`${ukMatch[3]}-${ukMatch[2]}-${ukMatch[1]}T00:00:00`);
+        } else if (monYrMatch) {
+          const mIdx = monthNames[monYrMatch[1].toLowerCase()];
+          if (mIdx !== undefined) {
+            targetDate = new Date(parseInt(monYrMatch[2], 10), mIdx, 1);
+          }
+        }
+
+        if (targetDate && !isNaN(targetDate.getTime())) {
+          const daysUntil = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
+          if (daysUntil <= 0) {
+            alerts.push(`${d.title} (Overdue/Expired)`);
+          } else if (daysUntil <= 30) {
+            alerts.push(`${d.title} (Review due in ${daysUntil}d)`);
+          }
+        }
+      });
+
+      const jantexChem = (appState.chemicals || []).find(c =>
+        (c.product.toLowerCase().includes('jantex') || c.product.toLowerCase().includes('janex')) &&
+        (c.product.toLowerCase().includes('sanitiser') || c.product.toLowerCase().includes('cleaner') || c.id === 'CHEM-1')
+      );
+      if (!jantexChem || !jantexChem.dilution || !jantexChem.contactTime ||
+          jantexChem.dilution.toUpperCase().includes('TO CONFIRM') ||
+          jantexChem.contactTime.toUpperCase().includes('TO CONFIRM')) {
+        alerts.push('Jantex Sanitiser Label Dilution/Contact Time');
+      }
+
+      return alerts;
+    }
+
+    function renderChecklistNotificationBanner() {
+      if (!isOwnerSessionActive || !('Notification' in window)) return '';
+      const perm = Notification.permission;
+      if (perm === 'granted') {
+        return `
+          <div style="margin-top:8px; padding:6px 10px; border-radius:8px; background:#f0fff4; border:1px solid #c6f6d5; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; font-size:0.75rem; color:#276749;">
+            <span>🔔 <strong>Android / Device Alerts Active</strong> — Monitoring 7-day, 4-week, probe &amp; expiry schedules.</span>
+            <button type="button" class="btn btn-sm btn-secondary" style="padding:2px 8px; font-size:0.7rem;" onclick="switchMainTab('system')">Alert Settings →</button>
+          </div>
+        `;
+      }
+      if (perm === 'denied') {
+        return `
+          <div style="margin-top:8px; padding:6px 10px; border-radius:8px; background:#fff5f5; border:1px solid #fed7d7; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; font-size:0.75rem; color:#9b2c2c;">
+            <span>🔕 <strong>Notifications Blocked</strong> — Allow notifications in Chrome Site Settings to get due-date alerts.</span>
+          </div>
+        `;
+      }
+      return `
+        <div style="margin-top:8px; padding:8px 10px; border-radius:8px; background:#ebf8ff; border:1px solid #bee3f8; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:0.78rem; color:#2c5282;">
+          <span>🔔 <strong>Get Android Alerts:</strong> Notify me when 7-day, 4-week, or monthly probe checks are due.</span>
+          <button type="button" class="btn btn-sm btn-primary" onclick="requestAndroidNotifications()">🔔 Enable Alerts</button>
+        </div>
+      `;
+    }
+
+    function renderNotificationSettingsCard() {
+      const badge = document.getElementById('notify-status-badge');
+      const hint = document.getElementById('notify-permission-hint');
+      const enableBtn = document.getElementById('btn-enable-notifications');
+      const prefs = getNotifyPrefs();
+
+      if (document.getElementById('pref-notify-weekly')) {
+        document.getElementById('pref-notify-weekly').checked = prefs.weeklyReview;
+        document.getElementById('pref-notify-fourweek').checked = prefs.fourWeekReview;
+        document.getElementById('pref-notify-probe').checked = prefs.probeCalibration;
+        document.getElementById('pref-notify-docs').checked = prefs.docsAndExpiry;
+        document.getElementById('pref-notify-duesoon').checked = prefs.dueSoonWarnings;
+      }
+
+      if (!('Notification' in window)) {
+        if (badge) { badge.className = 'badge badge-danger'; badge.textContent = 'Not Supported'; }
+        if (hint) hint.textContent = 'This browser does not support Web Push / PWA Notifications.';
+        if (enableBtn) enableBtn.disabled = true;
+        return;
+      }
+
+      const perm = Notification.permission;
+      if (perm === 'granted') {
+        if (badge) { badge.className = 'badge badge-success'; badge.textContent = '✓ Enabled'; }
+        if (hint) hint.innerHTML = '✅ <strong>Permission Granted:</strong> Your device will alert you when reviews, calibrations, or documents are due. Tip: Install via Chrome (<em>⋮ → Install app</em>) for background Android alerts.';
+        if (enableBtn) { enableBtn.textContent = '✓ Notifications Enabled'; enableBtn.className = 'btn btn-success'; }
+      } else if (perm === 'denied') {
+        if (badge) { badge.className = 'badge badge-danger'; badge.textContent = '🚫 Blocked'; }
+        if (hint) hint.innerHTML = '🚫 <strong>Blocked in Browser Settings:</strong> Tap the lock/tune icon in your Chrome address bar → <em>Permissions → Notifications → Allow</em>.';
+        if (enableBtn) { enableBtn.textContent = '🔔 Blocked (Check Chrome Settings)'; enableBtn.className = 'btn btn-secondary'; }
+      } else {
+        if (badge) { badge.className = 'badge badge-warning'; badge.textContent = '🔕 Off'; }
+        if (hint) hint.textContent = 'Tap "Enable Android Notifications" above and choose Allow when prompted.';
+        if (enableBtn) { enableBtn.textContent = '🔔 Enable Android Notifications'; enableBtn.className = 'btn btn-primary'; }
+      }
+    }
+
+    async function registerPeriodicReminderSync() {
+      try {
+        if ('serviceWorker' in navigator) {
+          const reg = await navigator.serviceWorker.ready;
+          if ('periodicSync' in reg) {
+            const status = await navigator.permissions.query({ name: 'periodic-background-sync' });
+            if (status.state === 'granted') {
+              await reg.periodicSync.register('wah-periodic-reminders', {
+                minInterval: 12 * 60 * 60 * 1000 // Check every 12 hours in background
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Periodic sync registration note:', e);
+      }
+    }
+
+    async function dispatchSWNotification(title, body, tag, data = {}) {
+      if (!('Notification' in window) || Notification.permission !== 'granted') return false;
+      const options = {
+        body,
+        icon: './icon-192.png',
+        badge: './icon-192.png',
+        tag,
+        renotify: false,
+        vibrate: [200, 100, 200],
+        data
+      };
+      try {
+        if ('serviceWorker' in navigator) {
+          const reg = await navigator.serviceWorker.ready;
+          if (reg && reg.showNotification) {
+            await reg.showNotification(title, options);
+            return true;
+          }
+        }
+        new Notification(title, options);
+        return true;
+      } catch (e) {
+        console.warn('Notification dispatch error:', e);
+        return false;
+      }
+    }
+
+    async function requestAndroidNotifications() {
+      if (!('Notification' in window)) {
+        return showToast('Notifications are not supported in this browser.', true);
+      }
+      try {
+        const result = await Notification.requestPermission();
+        renderNotificationSettingsCard();
+        renderActionReminders();
+        if (result === 'granted') {
+          await registerPeriodicReminderSync();
+          await syncReminderSnapshotToSW();
+          await dispatchSWNotification(
+            '🔔 Wah Pizza Safety Alerts Enabled',
+            'You will now receive Android reminders for 7-day, 4-week, digital probe & document reviews.',
+            'wah-welcome-notify',
+            { mainTab: 'today' }
+          );
+          showToast('Android notifications enabled!');
+          checkAndDispatchNotifications();
+        } else {
+          showToast('Notification permission was not granted.', true);
+        }
+      } catch (e) {
+        showToast('Could not request notification permission: ' + e.message, true);
+      }
+    }
+
+    async function sendTestNotification() {
+      if (!('Notification' in window)) {
+        return showToast('Notifications not supported on this browser.', true);
+      }
+      if (Notification.permission !== 'granted') {
+        return requestAndroidNotifications();
+      }
+      const status = getReviewStatus();
+      const ok = await dispatchSWNotification(
+        `🧪 Test Alert: Cycle Week ${status.cycleWeek} of 4`,
+        'Your Android notifications are working! Tapping this alert opens your Review log.',
+        'wah-test-notify-' + Date.now(),
+        { mainTab: 'today', subTab: 'sub-weekly', reviewType: status.recommendedReview }
+      );
+      if (ok) showToast('Test notification sent! Check your notification shade.');
+    }
+
+    async function syncReminderSnapshotToSW() {
+      try {
+        if (!('caches' in window)) return;
+        const reviewStatus = getReviewStatus();
+        const probeDaysList = (appState.records || [])
+          .filter(r => r.type === 'Probe Verification' && r.dateISO)
+          .sort((a, b) => (b.dateISO > a.dateISO ? 1 : -1));
+        const snapshot = {
+          ownerActive: !!isOwnerSessionActive,
+          lastAnyReviewISO: reviewStatus.latestAny?.dateISO || null,
+          lastFourWeekISO: reviewStatus.latestFourWeek?.dateISO || null,
+          weeklyCount: reviewStatus.weeklyCount || 0,
+          lastProbeISO: probeDaysList[0]?.dateISO || null,
+          pendingDocTitles: getPendingDocAlerts(),
+          notifyPrefs: getNotifyPrefs(),
+          lastNotifiedMap: getLastNotifiedMap(),
+          updatedAtISO: getUKDateISO()
+        };
+        const cache = await caches.open('wah-reminder-meta');
+        await cache.put('./__wah_reminder_state.json', new Response(JSON.stringify(snapshot), {
+          headers: { 'Content-Type': 'application/json' }
+        }));
+      } catch (e) {
+        console.warn('SW snapshot sync note:', e);
+      }
+    }
+
+    async function checkAndDispatchNotifications() {
+      if (!isOwnerSessionActive) return;
+      if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+      const todayISO = getUKDateISO();
+      const prefs = getNotifyPrefs();
+      const history = getLastNotifiedMap();
+      let changed = false;
+
+      const reviewStatus = getReviewStatus();
+      const probeDays = getDaysSinceLatestRecord('Probe Verification');
+      const probePending = (probeDays === null || probeDays >= 30);
+      const probeSoon = (probeDays !== null && probeDays >= 23 && probeDays < 30);
+
+      // 1. 4-Week Manager Review (28 days)
+      if (prefs.fourWeekReview) {
+        if (reviewStatus.isFourWeekDue && history.four_week_review !== todayISO) {
+          const sent = await dispatchSWNotification(
+            '📋 4-Week Manager Review & Gas Hose Audit Due',
+            reviewStatus.fourWeekDays === null
+              ? 'Your 28-day SFBB manager review & 5-year LPG hose inspection is due.'
+              : `${reviewStatus.fourWeekDays} days since last 4-week audit. Tap to sign off.`,
+            'wah-four-week-review',
+            { mainTab: 'today', subTab: 'sub-weekly', reviewType: 'Four-Week Review' }
+          );
+          if (sent) { history.four_week_review = todayISO; changed = true; }
+        } else if (prefs.dueSoonWarnings && reviewStatus.isFourWeekSoon && history.four_week_soon !== todayISO) {
+          const rem = Math.max(1, 28 - (reviewStatus.fourWeekDays ?? reviewStatus.anyDays ?? 0));
+          const sent = await dispatchSWNotification(
+            `⏳ 4-Week Manager Audit Due in ${rem} Day${rem > 1 ? 's' : ''}`,
+            'Prepare your monthly Safe Methods check & 5-year LPG hose inspection.',
+            'wah-four-week-soon',
+            { mainTab: 'today', subTab: 'sub-weekly', reviewType: 'Four-Week Review' }
+          );
+          if (sent) { history.four_week_soon = todayISO; changed = true; }
+        }
+      }
+
+      // 2. 7-Day Weekly Review
+      if (prefs.weeklyReview && !reviewStatus.isFourWeekDue) {
+        if (reviewStatus.isWeeklyDue && history.weekly_review !== todayISO) {
+          const sent = await dispatchSWNotification(
+            `📅 Weekly SFBB Review Due (Week ${reviewStatus.cycleWeek} of 4)`,
+            reviewStatus.anyDays === null
+              ? 'Time for your 7-day SFBB diary sign-off.'
+              : `${reviewStatus.anyDays} days since your last review. Tap to complete Week ${reviewStatus.cycleWeek}.`,
+            'wah-weekly-review',
+            { mainTab: 'today', subTab: 'sub-weekly', reviewType: 'Weekly Review' }
+          );
+          if (sent) { history.weekly_review = todayISO; changed = true; }
+        } else if (prefs.dueSoonWarnings && reviewStatus.isWeeklySoon && history.weekly_soon !== todayISO) {
+          const rem = Math.max(1, 7 - (reviewStatus.anyDays || 0));
+          const sent = await dispatchSWNotification(
+            `⏳ Weekly Review Due in ${rem} Day${rem > 1 ? 's' : ''} (Week ${reviewStatus.cycleWeek})`,
+            'Your 7-day SFBB diary review is coming up soon.',
+            'wah-weekly-soon',
+            { mainTab: 'today', subTab: 'sub-weekly', reviewType: 'Weekly Review' }
+          );
+          if (sent) { history.weekly_soon = todayISO; changed = true; }
+        }
+      }
+
+      // 3. 30-Day Monthly Digital Probe Calibration
+      if (prefs.probeCalibration) {
+        if (probePending && history.probe_calibration !== todayISO) {
+          const sent = await dispatchSWNotification(
+            '🌡️ Monthly Digital Probe Calibration Due',
+            probeDays === null
+              ? 'No probe verification found. Test in ice/boiling water (±1°C).'
+              : `Last calibrated ${probeDays} days ago. Tap to log monthly probe check.`,
+            'wah-probe-calibration',
+            { mainTab: 'today', subTab: 'sub-probe' }
+          );
+          if (sent) { history.probe_calibration = todayISO; changed = true; }
+        } else if (prefs.dueSoonWarnings && probeSoon && history.probe_soon !== todayISO) {
+          const rem = Math.max(1, 30 - probeDays);
+          const sent = await dispatchSWNotification(
+            `⏳ Digital Probe Check Due in ${rem} Day${rem > 1 ? 's' : ''}`,
+            'Monthly ice/boiling water probe accuracy test due soon.',
+            'wah-probe-soon',
+            { mainTab: 'today', subTab: 'sub-probe' }
+          );
+          if (sent) { history.probe_soon = todayISO; changed = true; }
+        }
+      }
+
+      // 4. Documents & Setup Expiries
+      if (prefs.docsAndExpiry) {
+        const docAlerts = getPendingDocAlerts();
+        if (docAlerts.length > 0 && history.docs_expiry !== todayISO) {
+          const sent = await dispatchSWNotification(
+            '📄 Compliance Document / Setup Review Due',
+            `${docAlerts.length} item(s): ${docAlerts.slice(0, 2).join(', ')}.`,
+            'wah-docs-expiry',
+            { mainTab: 'documents' }
+          );
+          if (sent) { history.docs_expiry = todayISO; changed = true; }
+        }
+      }
+
+      if (changed) {
+        saveLastNotifiedMap(history);
+        syncReminderSnapshotToSW();
+      }
+    }
+
+    function handleNotificationNavigation(data) {
+      if (!data || !isOwnerSessionActive) return;
+      if (data.subTab === 'sub-weekly') {
+        openReviewSubTab(data.reviewType || null);
+      } else if (data.subTab) {
+        switchMainTab('today');
+        switchSubTabById(data.subTab);
+      } else if (data.mainTab) {
+        switchMainTab(data.mainTab);
+      }
+    }
+
     function refreshAllUI() {
       checkEhoLinkExpirations();
       renderActionReminders();
@@ -4315,6 +4763,8 @@
       renderAllergensTab();
       renderStaffAndChemicals();
       renderSystemTab();
+      renderNotificationSettingsCard();
+      syncReminderSnapshotToSW();
     }
 
     /********************************************************************
@@ -6473,13 +6923,35 @@
       initFirebaseIfConfigured();
       refreshAllUI();
 
-      // Register Progressive Web App (PWA) Service Worker for offline kitchen resilience
+      // Register Progressive Web App (PWA) Service Worker for offline kitchen resilience & Android notifications
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').then((reg) => {
           console.log('Wah Pizza PWA Service Worker registered:', reg.scope);
+          registerPeriodicReminderSync();
         }).catch((err) => {
           console.warn('PWA SW registration note:', err);
         });
+        navigator.serviceWorker.addEventListener('message', (evt) => {
+          if (evt.data && evt.data.type === 'NAVIGATE_FROM_NOTIFICATION') {
+            handleNotificationNavigation(evt.data.data);
+          }
+        });
+      }
+
+      // Check notifications on startup & when returning to the app on Android
+      setTimeout(() => checkAndDispatchNotifications(), 2500);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          checkAndDispatchNotifications();
+        }
+      });
+
+      // Handle deep-link from tapped notification
+      const notifyNavParam = urlParams.get('notify_nav');
+      if (notifyNavParam && isOwnerSessionActive) {
+        try {
+          handleNotificationNavigation(JSON.parse(notifyNavParam));
+        } catch (e) {}
       }
 
       // Auto-detect ?eho=TOKEN URL parameter for EHO Read-Only link sharing
