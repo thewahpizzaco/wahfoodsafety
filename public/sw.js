@@ -1,4 +1,4 @@
-const CACHE_NAME = 'wah-safety-pwa-v4';
+const CACHE_NAME = 'wah-safety-pwa-v5';
 const REMINDER_META_CACHE = 'wah-reminder-meta';
 const REMINDER_META_URL = './__wah_reminder_state.json';
 
@@ -8,6 +8,8 @@ const STATIC_ASSETS = [
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
+  './icon-maskable-192.png',
+  './icon-maskable-512.png',
   './logo.png'
 ];
 
